@@ -1,0 +1,29 @@
+{
+  "name": "html-matcher",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "dependencies": {
+    "@emmetio/stream-reader": "^1.0.0"
+  },
+  "devDependencies": {
+    "babel-plugin-transform-es2015-modules-commonjs": "^6.23.0",
+    "babel-register": "^6.23.0",
+    "mocha": "^3.2.0",
+    "rollup": "^0.41.4"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/emmetio/html-matcher.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/emmetio/html-matcher/issues"
+  },
+  "homepage": "https://github.com/emmetio/html-matcher#readme"
+}
