@@ -63,7 +63,6 @@ describe('Content Stream Reader', () => {
 		it('substring', () => {
 			const content = new LineContentReader('abc\nde\n\nf');
 			const stream = new ContentStreamReader(content, 1, 1);
-
 			assert.equal(stream.next(), code('e'));
 			assert.equal(stream.current(), 'e');
 
