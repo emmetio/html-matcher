@@ -9,8 +9,9 @@ describe('Content Stream Reader', () => {
 
 	describe('Line reader', () => {
 		class LineContentReader {
-			constructor(content) {
+			constructor(content, cursor) {
 				this.lines = content.split(/\r\n|\n|r/g);
+				this.cursor = cursor || 0;
 			}
 
 			get(cursor) {
@@ -28,7 +29,7 @@ describe('Content Stream Reader', () => {
 
 		it('read from stream', () => {
 			const content = new LineContentReader('abc\nde\n\nf');
-			const stream = new ContentStreamReader(content, 0);
+			const stream = new ContentStreamReader(content);
 
 			assert(stream.sof());
 			assert(!stream.eof());
@@ -61,8 +62,8 @@ describe('Content Stream Reader', () => {
 		});
 
 		it('substring', () => {
-			const content = new LineContentReader('abc\nde\n\nf');
-			const stream = new ContentStreamReader(content, 1, 1);
+			const content = new LineContentReader('abc\nde\n\nf', 1);
+			const stream = new ContentStreamReader(content, 1);
 			assert.equal(stream.next(), code('e'));
 			assert.equal(stream.current(), 'e');
 
@@ -77,8 +78,8 @@ describe('Content Stream Reader', () => {
 		});
 
 		it('back-up', () => {
-			const content = new LineContentReader('abc\nde\n\nf');
-			const stream = new ContentStreamReader(content, 3, 1);
+			const content = new LineContentReader('abc\nde\n\nf', 3);
+			const stream = new ContentStreamReader(content, 1);
 
 			assert(stream.eof());
 			stream.backUp();
