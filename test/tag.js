@@ -2,11 +2,13 @@
 
 const assert = require('assert');
 require('babel-register');
+const ContentStreamReader = require('../lib/content-stream-reader').default;
 const parseTag = require('../lib/tag').default;
+const tag = str => parseTag(new ContentStreamReader(str));
 
 describe('Parse tag', () => {
 	it('basic', () => {
-		let m = parseTag('<div>');
+		let m = tag('<div>');
 		assert.equal(m.type, 'open');
 		assert.equal(m.name.value, 'div');
 		assert.deepEqual(m.start, {cursor: 0, pos: 0});
@@ -16,14 +18,14 @@ describe('Parse tag', () => {
 		assert.deepEqual(m.attributes, []);
 		assert(!m.selfClosing);
 
-		m = parseTag('<div>foo');
+		m = tag('<div>foo');
 		assert.deepEqual(m.start, {cursor: 0, pos: 0});
 		assert.deepEqual(m.end, {cursor: 0, pos: 5});
 		assert.equal(m.name.value, 'div');
 		assert.deepEqual(m.name.start, {cursor: 0, pos: 1});
 		assert.deepEqual(m.name.end, {cursor: 0, pos: 4});
 
-		m = parseTag('</div>foo');
+		m = tag('</div>foo');
 		assert.deepEqual(m.start, {cursor: 0, pos: 0});
 		assert.deepEqual(m.end, {cursor: 0, pos: 6});
 		assert.equal(m.name.value, 'div');
@@ -31,13 +33,13 @@ describe('Parse tag', () => {
 		assert.deepEqual(m.name.end, {cursor: 0, pos: 5});
 
 		// should not parse, invalid definition
-		assert(!parseTag('</ div>'));
-		assert(!parseTag('<div'));
-		assert(!parseTag('< 1'));
+		assert(!tag('</ div>'));
+		assert(!tag('<div'));
+		assert(!tag('< 1'));
 	});
 
 	it('attributes', () => {
-		let m = parseTag('<div a="b">');
+		let m = tag('<div a="b">');
 		assert.equal(m.type, 'open');
 		assert.deepEqual(m.start, {cursor: 0, pos: 0});
 		assert.deepEqual(m.end, {cursor: 0, pos: 11});
@@ -54,7 +56,7 @@ describe('Parse tag', () => {
 		assert.deepEqual(attr.name.end, {cursor: 0, pos: 6});
 		assert.equal(attr.value.value, 'b');
 
-		m = parseTag('<div foo bar=baz   class="test">text');
+		m = tag('<div foo bar=baz   class="test">text');
 		assert.equal(m.type, 'open');
 		assert.deepEqual(m.start, {cursor: 0, pos: 0});
 		assert.deepEqual(m.end, {cursor: 0, pos: 32});
@@ -90,7 +92,7 @@ describe('Parse tag', () => {
 	});
 
 	it('expressions in attributes', () => {
-		let m = parseTag('<div a={foo} {...bar}>');
+		let m = tag('<div a={foo} {...bar}>');
 		assert.equal(m.type, 'open');
 		assert.deepEqual(m.start, {cursor: 0, pos: 0});
 		assert.deepEqual(m.end, {cursor: 0, pos: 22});
@@ -106,7 +108,7 @@ describe('Parse tag', () => {
 		assert(!attr.value);
 		assert(attr.boolean);
 
-		m = parseTag('<div [ng-click]="test" <?= $some_php; ?>>')
+		m = tag('<div [ng-click]="test" <?= $some_php; ?>>')
 		assert.equal(m.type, 'open');
 		assert.deepEqual(m.start, {cursor: 0, pos: 0});
 		assert.deepEqual(m.end, {cursor: 0, pos: 41});
