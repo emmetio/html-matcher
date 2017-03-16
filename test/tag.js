@@ -6,7 +6,7 @@ const ContentStreamReader = require('../lib/content-stream-reader').default;
 const parseTag = require('../lib/tag').default;
 const tag = str => parseTag(new ContentStreamReader(str));
 
-describe('Parse tag', () => {
+describe('Tag', () => {
 	it('basic', () => {
 		let m = tag('<div>');
 		assert.equal(m.type, 'open');
