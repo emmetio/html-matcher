@@ -2,18 +2,19 @@
   "name": "html-matcher",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
-  "dependencies": {
-    "@emmetio/stream-reader": "^1.0.0"
-  },
+  "main": "dist/html-matcher.cjs.js",
+  "module": "dist/html-matcher.es.js",
   "devDependencies": {
     "babel-plugin-transform-es2015-modules-commonjs": "^6.23.0",
     "babel-register": "^6.23.0",
     "mocha": "^3.2.0",
-    "rollup": "^0.41.4"
+    "rollup": "^0.41.6",
+    "rollup-watch": "^3.2.2"
   },
   "scripts": {
-    "test": "mocha"
+    "test": "mocha",
+    "build": "rollup -c",
+    "watch": "rollup -wc"
   },
   "repository": {
     "type": "git",
