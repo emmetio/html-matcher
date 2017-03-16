@@ -123,5 +123,12 @@ describe('Parse tag', () => {
 		assert.equal(attr.name.value, '<?= $some_php; ?>');
 		assert(!attr.value);
 		assert(attr.boolean);
+
+		m = tag('<div *ng-for="test">');
+		assert.equal(m.attributes.length, 1);
+
+		attr = m.attributes[0];
+		assert.equal(attr.name.value, '*ng-for');
+		assert.equal(attr.value.value, 'test');
 	});
 });
