@@ -124,7 +124,7 @@ describe('Parse tag', () => {
 		assert(!attr.value);
 		assert(attr.boolean);
 
-		m = tag('<div *ng-for="test">');
+		m = tag('<div *ng-for="test" />');
 		assert.equal(m.attributes.length, 1);
 
 		attr = m.attributes[0];
