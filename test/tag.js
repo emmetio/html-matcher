@@ -32,6 +32,14 @@ describe('Tag', () => {
 		assert.deepEqual(m.name.start, {cursor: 0, pos: 2});
 		assert.deepEqual(m.name.end, {cursor: 0, pos: 5});
 
+		m = tag('<br />');
+		assert(m.selfClosing);
+		assert.deepEqual(m.start, {cursor: 0, pos: 0});
+		assert.deepEqual(m.end, {cursor: 0, pos: 6});
+		assert.equal(m.name.value, 'br');
+		assert.deepEqual(m.name.start, {cursor: 0, pos: 1});
+		assert.deepEqual(m.name.end, {cursor: 0, pos: 3});
+
 		// should not parse, invalid definition
 		assert(!tag('</ div>'));
 		assert(!tag('<div'));
