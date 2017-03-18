@@ -1,7 +1,7 @@
 'use strict';
 
 import tag from './lib/tag';
-import comment from './lib/comment';
+import comment, { backwardComment } from './lib/comment';
 import ContentReader from './lib/content-reader';
 import ContentStreamReader from './lib/content-stream-reader';
 
@@ -19,13 +19,7 @@ export const findPairOptions = {
 	 * in non-XML syntax
 	 * @type {Array}
 	 */
-	empty: ['img', 'meta', 'link', 'br', 'area'],
-
-	/**
-	 * Exclude comments from match result
-	 * @type {Boolean}
-	 */
-	excludeComments: false
+	empty: ['img', 'meta', 'link', 'br', 'base', 'hr', 'area', 'wbr']
 };
 
 /**
@@ -44,14 +38,13 @@ export function findPair(content, pos, options) {
 	options = Object.assign({}, findPairOptions, options);
 	const stream = new ContentStreamReader(content, pos);
 	const start = stream.location;
+	const emptyElements = new Set(options.empty);
+
 	const inRange = (range, point) => pointInRange(stream, range, point || start);
-	const isEmpty = token => options.empty.includes( getName(token) );
-	const getName = token => typeof token === 'object'
-		? token.name && token.name.value.toLowerCase()
-		: token;
+	const isEmpty = tag => tag.selfClosing || (!options.xml && emptyElements.has(getName(tag)));
 
 	// Tag matching algorithm:
-	// 1. Search backward for first open, unclosed element. Use start of close/open
+	// 1. Search backward for first open, unclosed element. Use stack of close/open
 	//    elements to keep track of unclosed elements
 	// 2. When element found and it’s not self-closing, search forward for closing
 	//   element, maintaining open/close stack
@@ -59,57 +52,62 @@ export function findPair(content, pos, options) {
 	const stack = [];
 
 	// 1. Search backward
-	while (true) {
-		if (item = match(stream)) {
-			if (item.type === 'comment' && inRange(item) && !options.excludeComments) {
-				// Designated location is inside comment
-				return item;
-			}
-
-			name = getName(item);
-
-			// console.log('found', name, item.type, item.selfClosing);
-
-			if (item.type === 'close') {
-				if (inRange(item)) {
-					// Designated location is in closing tag: we should find opening
-					// match for it
-					close = item;
-				} else {
-					// Closing tag is on the way to required opening tag
-					stack.push(name);
-				}
-			} else if (item.type === 'open') {
-				if (inRange(item)) {
-					// Could be an opening tag and should find its closing part,
-					// or an empty, void element and we should stop searching
-					open = item;
-					if (item.selfClosing || (!options.xml && isEmpty(name))) {
-						close = item;
-					}
-					break;
-				} else if (last(stack) === name) {
-					stack.pop();
-				} else if (!item.selfClosing && (options.xml || !isEmpty(name))) {
-					open = item;
-					break;
-				}
-			}
-
-			// Revert stream to item start
-			stream.location = item.start;
+	do {
+		if (backwardComment(stream)) {
+			continue;
 		}
 
-		if (stream.sof()) {
-			break;
-		} else {
-			stream.backUp();
+		item = match(stream);
+
+		if (!item) {
+			continue;
 		}
-	}
+
+		// Revert stream to item start to resume backward move
+		stream.location = item.start;
+		name = getName(item);
+
+		// console.log('found', name, item.type, item.selfClosing);
+
+		if (stream.compare(item.start, start) === 0) {
+			// Edge case: element bgins right at starting search position.
+			// This is not what we’re looking for, we need its parent element
+			continue;
+		}
+
+		if (item.type === 'comment' && inRange(item)) {
+			// Designated location is inside comment
+			return item;
+		} else if (item.type === 'close') {
+			if (inRange(item)) {
+				// Designated location is in closing tag: we should find opening
+				// match for it
+				close = item;
+			} else {
+				// Closing tag is on the way to required opening tag
+				stack.push(name);
+			}
+		} else if (item.type === 'open') {
+			if (inRange(item)) {
+				// Could be an opening tag and should find its closing part,
+				// or an empty, void element and we should stop searching
+				open = item;
+				close = isEmpty(item) ? item : null;
+				break;
+			} else if (last(stack) === name) {
+				stack.pop();
+			} else if (!isEmpty(item)) {
+				open = item;
+				break;
+			}
+		}
+	} while (stream.backUp());
 
 	if (!open) {
 		return null;
 	}
+
+	// console.log('1. open: %s, close: %s', open && open.valueOf(), close && close.valueOf());
 
 	if (!close) {
 		// 2. Search forward for closing tag
@@ -119,8 +117,9 @@ export function findPair(content, pos, options) {
 		while (!stream.eof()) {
 			if (item = match(stream)) {
 				name = getName(item);
-				if (item.type === 'open' && (options.xml || !isEmpty(name))) {
-					stack.push(getName(item));
+
+				if (item.type === 'open' && !isEmpty(item)) {
+					stack.push(name);
 				} else if (item.type === 'close') {
 					if (last(stack) === name) {
 						stack.pop();
@@ -129,14 +128,22 @@ export function findPair(content, pos, options) {
 						break;
 					}
 				}
+			} else if (item = backwardComment(stream, true)) {
+				// the only way this matches is that we initially started inside
+				// comment
+				return item;
+			} else {
+				stream.next();
 			}
-
-			stream.next();
 		}
 	}
 
-	// 3. Validate closing tag
-	if (close && (open === close || getName(close) !== getName(open))) {
+	// console.log('2. open: %s, close: %s', open && open.valueOf(), close && close.valueOf());
+
+	// 3. Validate closing tag: remove it if it’s the same as open tag
+	// (self-closing or empty tag) or if it’s name doesn’t match open tag
+	// (invalid HTML)
+	if (!close || open === close || getName(close) !== getName(open)) {
 		close = null;
 	}
 
@@ -172,6 +179,25 @@ export function parse(content) {
 	}
 
 	return stats;
+}
+
+/**
+ * Returns name of given matched token
+ * @param  {Token|String} tag
+ * @return {String}
+ */
+function getName(tag) {
+	if (tag) {
+		if (tag.type === 'comment') {
+			return '#comment';
+		}
+
+		if (typeof tag === 'object') {
+			tag = tag.name.value;
+		}
+
+		return tag.toLowerCase();
+	}
 }
 
 function match(stream) {

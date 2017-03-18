@@ -25,11 +25,16 @@ describe('HTML Tag Matcher', () => {
 		assert.deepEqual(xmlRange(xhtml1, 43), [0, 117]);
 		assert.deepEqual(xmlRange(xhtml1, 99), [89, 105]);
 
-		assert.deepEqual(xmlRange(xhtml2, 39), [12, 52]);
-		assert.deepEqual(xmlRange(xhtml2, 52), [12, 52]);
+		assert.deepEqual(xmlRange(xhtml2, 39), [6, 59]);
+		assert.deepEqual(xmlRange(xhtml2, 52), [6, 59]);
 		assert.deepEqual(xmlRange(xhtml2, 57), [6, 59]);
 		assert.deepEqual(xmlRange(xhtml2, 3),  [0, 66]);
 		assert.deepEqual(xmlRange(xhtml2, 45), [39, 52]);
 		assert.deepEqual(xmlRange(xhtml2, 95), [66, 97]);
+
+		assert.deepEqual(xmlRange(xhtml3, 77), [0, 109]);
+		assert.deepEqual(xmlRange(xhtml3, 49), [25, 56]);
+
+		assert.deepEqual(xmlRange(xhtml4, 11), [0, 15]);
 	});
 });
