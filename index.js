@@ -25,19 +25,26 @@ export const findPairOptions = {
 /**
  * Finds tags pair (opening and closing tags) for given character `pos`
  * of content.
- * @param  {ContentReader|String} content
- * @param  {Number}  pos
- * @param  {Object}  options Matching options (see `findPairOptions`)
+ * @param  {String|ContentReader|ContentStreamReader} content
+ * @param  {Number}  [pos]
+ * @param  {Object}  [options] Matching options (see `findPairOptions`)
  * @return {Object}
  */
 export function findPair(content, pos, options) {
+	if (pos && typeof pos === 'object') {
+		options = pos;
+		pos = null;
+	}
+
 	options = Object.assign({}, findPairOptions, options);
 	const stream = createStream(content, pos);
 	const start = stream.location;
 	const emptyElements = new Set(options.empty);
 
 	const inRange = (range, point) => pointInRange(stream, range, point || start);
-	const isEmpty = tag => tag.selfClosing || (!options.xml && emptyElements.has(getName(tag)));
+	const isEmpty = options.xml
+		? (tag, name) => tag.selfClosing
+		: (tag, name) => tag.selfClosing || emptyElements.has(name);
 
 	// Tag matching algorithm:
 	// 1. Search backward for first open, unclosed element. Use stack of close/open
@@ -47,27 +54,23 @@ export function findPair(content, pos, options) {
 	let open, close, item, name;
 	const stack = [];
 
+	item = match(stream);
+	if (item && stream.compare(item.start, start) === 0) {
+		// Edge case: element begins right at starting search position.
+		// This is not what we’re looking for, we need its parent element
+		stream.location = start;
+		stream.back();
+	}
+
 	// 1. Search backward
 	do {
-		if (backwardComment(stream)) {
-			continue;
-		}
-
-		item = match(stream);
-
-		if (!item) {
+		if (backwardComment(stream) || !(item = match(stream))) {
 			continue;
 		}
 
 		// Revert stream to item start to resume backward move
 		stream.location = item.start;
 		name = getName(item);
-
-		if (stream.compare(item.start, start) === 0) {
-			// Edge case: element bgins right at starting search position.
-			// This is not what we’re looking for, we need its parent element
-			continue;
-		}
 
 		if (item.type === 'comment' && inRange(item)) {
 			// Designated location is inside comment
@@ -86,16 +89,16 @@ export function findPair(content, pos, options) {
 				// Could be an opening tag and should find its closing part,
 				// or an empty, void element and we should stop searching
 				open = item;
-				close = isEmpty(item) ? item : null;
+				close = isEmpty(item, name) ? item : null;
 				break;
 			} else if (last(stack) === name) {
 				stack.pop();
-			} else if (!isEmpty(item)) {
+			} else if (!isEmpty(item, name)) {
 				open = item;
 				break;
 			}
 		}
-	} while (stream.backUp());
+	} while (stream.back());
 
 	if (!open) {
 		return null;
@@ -110,7 +113,7 @@ export function findPair(content, pos, options) {
 			if (item = match(stream)) {
 				name = getName(item);
 
-				if (item.type === 'open' && !isEmpty(item)) {
+				if (item.type === 'open' && !isEmpty(item, name)) {
 					stack.push(name);
 				} else if (item.type === 'close') {
 					if (last(stack) === name) {
@@ -153,6 +156,10 @@ export function findPair(content, pos, options) {
  * @return {ContentStreamReader}
  */
 export function createStream(content, pos) {
+	if (content instanceof ContentStreamReader) {
+		return content;
+	}
+
 	if (typeof content === 'string') {
 		content = new ContentReader(content, pos);
 	}
@@ -166,26 +173,21 @@ export function createStream(content, pos) {
  * @return {Token}
  */
 export function match(stream) {
+	// fast-path optimization: check for `<` code
+	if (stream.peek() !== 60 /* < */) {
+		return null;
+	}
+
 	return tag(stream) || comment(stream);
 }
 
 /**
  * Returns name of given matched token
- * @param  {Token|String} tag
+ * @param  {Token} tag
  * @return {String}
  */
 function getName(tag) {
-	if (tag) {
-		if (tag.type === 'comment') {
-			return '#comment';
-		}
-
-		if (typeof tag === 'object') {
-			tag = tag.name.value;
-		}
-
-		return tag.toLowerCase();
-	}
+	return tag.type === 'comment' ? '#comment' : tag.name.value.toLowerCase();
 }
 
 function pointInRange(stream, range, point) {

@@ -82,12 +82,8 @@ describe('Content Stream Reader', () => {
 			const stream = new ContentStreamReader(content, 1);
 
 			assert(stream.eof());
-			stream.backUp();
-
+			stream.back();
 			assert.equal(stream.peek(), code('f'));
-
-			stream.backUp(3);
-			assert.equal(stream.peek(), code('d'));
 		});
 	});
 });
