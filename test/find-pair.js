@@ -1,5 +1,7 @@
 'use strict';
 
+const fs = require('fs');
+const path = require('path');
 const assert = require('assert');
 require('babel-register');
 const findPair = require('../index').findPair;
@@ -10,7 +12,7 @@ const xmlRange = (content, pos) => range(findPairXML(content, pos));
 const htmlRange = (content, pos) => range(findPair(content, pos));
 
 describe('HTML Tag Matcher', () => {
-	it.only('xml', () => {
+	it('XML syntax', () => {
 		const xhtml1 = '<p><strong>Hello</strong> world <br /> to all <img src="/path/to/image.png" alt="" /> my <!-- enemies --> friends</p>';
 		const xhtml2 = '<span><span><br /><img src="" alt="" /><span></span></span></span><strong><em>hello</em></strong> world';
 		const xhtml3 = '<p>Lorem ipsum dolor sit <!-- Don\'t use <b> tag here --> <span>amet</span>, consectetur adipiscing elit. </p>';
@@ -36,5 +38,25 @@ describe('HTML Tag Matcher', () => {
 		assert.deepEqual(xmlRange(xhtml3, 49), [25, 56]);
 
 		assert.deepEqual(xmlRange(xhtml4, 11), [0, 15]);
+	});
+
+	it('HTML syntax', () => {
+		const html1 = '<p><b>Hello</b> world <br> to all <img src="/path/to/image.png" alt=""> my friends</p><p>Another paragraph';
+		const html2 = '<div><b><br></b></div>';
+		const html3 = '<b><b><br></b></b>';
+
+		assert.deepEqual(htmlRange(html1, 25), [22, 26]);
+		assert.deepEqual(htmlRange(html1, 27), [0, 86]);
+		assert.deepEqual(htmlRange(html1, 64), [34, 71]);
+		assert.deepEqual(htmlRange(html1, 75), [0, 86]);
+
+		assert.deepEqual(htmlRange(html2, 16), [0, 22]);
+
+		assert.deepEqual(htmlRange(html3, 2), [0, 18]);
+	});
+
+	it('common file', () => {
+		const file = fs.readFileSync(path.resolve(__dirname, './samples/webkit.html'), 'utf8');
+		assert.deepEqual(htmlRange(file, 20697), [1380, 20795]);
 	});
 });

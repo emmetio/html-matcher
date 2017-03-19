@@ -31,12 +31,8 @@ export const findPairOptions = {
  * @return {Object}
  */
 export function findPair(content, pos, options) {
-	if (typeof content === 'string') {
-		content = new ContentReader(content, pos);
-	}
-
 	options = Object.assign({}, findPairOptions, options);
-	const stream = new ContentStreamReader(content, pos);
+	const stream = createStream(content, pos);
 	const start = stream.location;
 	const emptyElements = new Set(options.empty);
 
@@ -66,8 +62,6 @@ export function findPair(content, pos, options) {
 		// Revert stream to item start to resume backward move
 		stream.location = item.start;
 		name = getName(item);
-
-		// console.log('found', name, item.type, item.selfClosing);
 
 		if (stream.compare(item.start, start) === 0) {
 			// Edge case: element bgins right at starting search position.
@@ -107,8 +101,6 @@ export function findPair(content, pos, options) {
 		return null;
 	}
 
-	// console.log('1. open: %s, close: %s', open && open.valueOf(), close && close.valueOf());
-
 	if (!close) {
 		// 2. Search forward for closing tag
 		stack.length = 0;
@@ -138,8 +130,6 @@ export function findPair(content, pos, options) {
 		}
 	}
 
-	// console.log('2. open: %s, close: %s', open && open.valueOf(), close && close.valueOf());
-
 	// 3. Validate closing tag: remove it if it’s the same as open tag
 	// (self-closing or empty tag) or if it’s name doesn’t match open tag
 	// (invalid HTML)
@@ -156,29 +146,27 @@ export function findPair(content, pos, options) {
 	};
 }
 
-export function parse(content) {
-	const stream = new ContentStreamReader(new ContentReader(content));
-	const stats = {
-		open: 0,
-		close: 0,
-		comment: 0
-	};
-
-	let item;
-
-	while (!stream.eof()) {
-		if (item = comment(stream)) {
-			stats.comment++;
-			stream.location = item.end;
-		} else if (item = tag(stream)) {
-			stats[item.type]++;
-			stream.location = item.end;
-		} else {
-			stream.next();
-		}
+/**
+ * Creates content reader stream
+ * @param  {ContentReader|String} content
+ * @param  {Number} [pos]  Initial stream reader position in current content pointer
+ * @return {ContentStreamReader}
+ */
+export function createStream(content, pos) {
+	if (typeof content === 'string') {
+		content = new ContentReader(content, pos);
 	}
 
-	return stats;
+	return new ContentStreamReader(content, pos);
+}
+
+/**
+ * Matches known token in current state of given stream
+ * @param  {ContentStreamReader} stream
+ * @return {Token}
+ */
+export function match(stream) {
+	return tag(stream) || comment(stream);
 }
 
 /**
@@ -198,10 +186,6 @@ function getName(tag) {
 
 		return tag.toLowerCase();
 	}
-}
-
-function match(stream) {
-	return tag(stream) || comment(stream);
 }
 
 function pointInRange(stream, range, point) {
