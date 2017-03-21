@@ -1,7 +1,7 @@
 {
-  "name": "html-matcher",
-  "version": "1.0.0",
-  "description": "",
+  "name": "@emmetio/html-matcher",
+  "version": "0.0.1",
+  "description": "Minimalistic and ultra-fast HTML parser & matcher",
   "main": "dist/html-matcher.cjs.js",
   "module": "dist/html-matcher.es.js",
   "devDependencies": {
@@ -21,10 +21,13 @@
     "url": "git+https://github.com/emmetio/html-matcher.git"
   },
   "keywords": [],
-  "author": "",
+  "author": "Sergey Chikuyonok <serge.che@gmail.com>",
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/emmetio/html-matcher/issues"
   },
-  "homepage": "https://github.com/emmetio/html-matcher#readme"
+  "homepage": "https://github.com/emmetio/html-matcher#readme",
+  "directories": {
+    "test": "test"
+  }
 }
