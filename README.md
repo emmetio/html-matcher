@@ -37,15 +37,24 @@ const contentReader = {
 	cursor: 0, // a pointer to a data chunk
 
 	// Returns a code chunk for given cursor
-	get(cursor) {
-		return lines[cursor];
+	charCodeAt(cursor, pos) {
+		return lines[cursor].charCodeAt(pos);
+	}
+
+	// Returns length of code chunk, identified by `cursor`
+	length(cursor) {
+		return lines[cursor].length;
+	}
+
+	substring(from, to) {
+		
 	}
 
 	// Returns cursor for next code chunk from given cursor
 	// or `null` if there’s no next chunk
 	next(cursor) {
 		cursor++;
-		return cursor < lines.length ? cursor : null
+		return cursor < lines.length ? cursor : null;
 	}
 
 	// Returns cursor for previous code chunk from given cursor
