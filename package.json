@@ -29,5 +29,9 @@
   "homepage": "https://github.com/emmetio/html-matcher#readme",
   "directories": {
     "test": "test"
+  },
+  "dependencies": {
+    "@emmetio/stream-reader": "^2.0.0",
+    "@emmetio/stream-reader-utils": "^0.1.0"
   }
 }

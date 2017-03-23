@@ -11,7 +11,7 @@ const range = token => [token.start.pos, token.end ? token.end.pos : token.start
 const xmlRange = (content, pos) => range(findPairXML(content, pos));
 const htmlRange = (content, pos) => range(findPair(content, pos));
 
-describe('HTML Tag Matcher', () => {
+describe.skip('HTML Tag Matcher', () => {
 	it('XML syntax', () => {
 		const xhtml1 = '<p><strong>Hello</strong> world <br /> to all <img src="/path/to/image.png" alt="" /> my <!-- enemies --> friends</p>';
 		const xhtml2 = '<span><span><br /><img src="" alt="" /><span></span></span></span><strong><em>hello</em></strong> world';

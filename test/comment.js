@@ -1,36 +1,23 @@
 'use strict';
 
 const assert = require('assert');
+const StreamReader = require('@emmetio/stream-reader');
 require('babel-register');
-const ContentStreamReader = require('../lib/content-stream-reader').default;
 const consumeComment = require('../lib/comment').default;
-const consumeCommentBackward = require('../lib/comment').backwardComment;
-const comment = str => consumeComment(new ContentStreamReader(str));
-const backwardComment = str => consumeCommentBackward(new ContentStreamReader(str, str.length));
+const comment = str => consumeComment(new StreamReader(str));
 
 describe('Comment', () => {
-	it('consume forward', () => {
+	it('consume', () => {
 		let c = comment('<!-- foo - bar -->');
-		assert.deepEqual(c.type, 'comment');
-		assert.deepEqual(c.start, {cursor: 0, pos: 0});
-		assert.deepEqual(c.end, {cursor: 0, pos: 18});
+		assert.equal(c.type, 'comment');
+		assert.equal(c.start, 0);
+		assert.equal(c.end, 18);
 
 		// consume unclosed: still a comment
 		c = comment('<!-- foo - bar');
-		assert.deepEqual(c.type, 'comment');
-		assert.deepEqual(c.start, {cursor: 0, pos: 0});
-		assert.deepEqual(c.end, {cursor: 0, pos: 14});
-
-		// do not consume
-		c = comment('<! -- foo - bar -- >');
-		assert(!c);
-	});
-
-	it('consume backward', () => {
-		let c = backwardComment('test <!-- foo - bar -->');
-		assert.deepEqual(c.type, 'comment');
-		assert.deepEqual(c.start, {cursor: 0, pos: 5});
-		assert.deepEqual(c.end, {cursor: 0, pos: 23});
+		assert.equal(c.type, 'comment');
+		assert.equal(c.start, 0);
+		assert.equal(c.end, 14);
 
 		// do not consume
 		c = comment('<! -- foo - bar -- >');
