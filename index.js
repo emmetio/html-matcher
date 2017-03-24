@@ -5,6 +5,7 @@ import Node from './lib/node';
 import tag from './lib/tag';
 import comment from './lib/comment';
 import cdata from './lib/cdata';
+import { eatArray, toCharCodes } from './lib/utils';
 
 export const defaultOptions = {
 	/**
@@ -39,29 +40,30 @@ export default function parse(content, options) {
 
 	const root = new Node(stream, 'root');
 	const empty = new Set(options.empty);
-	const special = new Set(options.special);
-	const isEmpty = token =>
-		token.selfClosing || (!options.xml && empty.has(getName(token)))
-	const isSpecial = token => special.has(getName(token));
+	const special = options.special.reduce(
+		(map, name) => map.set(name, toCharCodes(`</${name}>`)), new Map());
+	const isEmpty = (token, name) =>
+		token.selfClosing || (!options.xml && empty.has(name))
 
-	let m, node, stack = [root];
+	let m, node, name, stack = [root];
 
 	while (!stream.eof()) {
 		if (m = match(stream)) {
+			name = getName(m);
+
 			if (m.type === 'open') {
 				// opening tag
 				node = new Node(stream, 'tag', m);
 				last(stack).addChild(node);
-				if (isSpecial(m)) {
-					node.close = consumeSpecial(stream, getName(m));
-				} else if (!isEmpty(m)) {
+				if (special.has(name)) {
+					node.close = consumeSpecial(stream, special.get(name));
+				} else if (!isEmpty(m, name)) {
 					stack.push(node);
 				}
 			} else if (m.type === 'close') {
 				// closing tag, find it’s matching opening tag
-				const curName = getName(m);
 				for (let i = stack.length - 1; i > 0; i--) {
-					if (stack[i].name.toLowerCase() === curName) {
+					if (stack[i].name.toLowerCase() === name) {
 						stack[i].close = m;
 						stack = stack.slice(0, i);
 						break;
@@ -91,20 +93,20 @@ export function match(stream) {
 }
 
 /**
- * Consumes stream until it finds closing tag with `name`
  * @param  {StreamReader} stream
- * @param  {String} name
+ * @param  {Number[]} codes
  * @return {Token}
  */
-function consumeSpecial(stream, name) {
+function consumeSpecial(stream, codes) {
 	const start = stream.pos;
 	let m;
 
 	while (!stream.eof()) {
-		m = tag(stream);
-		if (m && m.type === 'close' && getName(m) === name) {
-			return m;
+		if (eatArray(stream, codes)) {
+			stream.start = stream.pos;
+			return tag(stream);
 		}
+		stream.next();
 	}
 
 	stream.pos = start;
@@ -117,7 +119,7 @@ function consumeSpecial(stream, name) {
  * @return {String}
  */
 function getName(tag) {
-	return tag.name.value.toLowerCase();
+	return tag.name ? tag.name.value.toLowerCase() : `#${tag.type}`;
 }
 
 function last(arr) {
