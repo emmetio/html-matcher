@@ -1,6 +1,6 @@
 {
   "name": "@emmetio/html-matcher",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Minimalistic and ultra-fast HTML parser & matcher",
   "main": "dist/html-matcher.cjs.js",
   "module": "dist/html-matcher.es.js",
