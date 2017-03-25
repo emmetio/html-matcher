@@ -10,7 +10,7 @@ import { eatArray, toCharCodes } from './lib/utils';
 export const defaultOptions = {
 	/**
 	 * Expect XML content in searching content. It alters how should-be-empty
-	 * elements area treated: for example, in XML parser will try to locate
+	 * elements are treated: for example, in XML mode parser will try to locate
 	 * closing pair for `<br>` tag
 	 * @type {Boolean}
 	 */
