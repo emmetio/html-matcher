@@ -2,7 +2,7 @@
 
 const StreamReader = require('@emmetio/stream-reader');
 const benchmark = require('htmlparser-benchmark');
-const Parser = require('htmlparser2').Parser;
+const htmlparser2 = require('htmlparser2');
 const parse = require('./').default;
 
 const bench1 = benchmark((html, callback) => {
@@ -11,11 +11,10 @@ const bench1 = benchmark((html, callback) => {
 });
 
 const bench2 = benchmark((html, callback) => {
-	const parser = new Parser({
-		onend: callback,
+	htmlparser2.parseDOM(html, {
 		onerror: callback
 	});
-	parser.end(html);
+	callback();
 });
 
 
