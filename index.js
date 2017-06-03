@@ -103,7 +103,7 @@ function consumeSpecial(stream, codes) {
 
 	while (!stream.eof()) {
 		if (eatArray(stream, codes)) {
-			stream.start = stream.pos;
+			stream.pos = stream.start;
 			return tag(stream);
 		}
 		stream.next();
