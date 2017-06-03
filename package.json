@@ -1,6 +1,6 @@
 {
   "name": "@emmetio/html-matcher",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "Minimalistic and ultra-fast HTML parser & matcher",
   "main": "dist/html-matcher.cjs.js",
   "module": "dist/html-matcher.es.js",
@@ -17,7 +17,7 @@
     "test": "mocha",
     "build": "rollup -c",
     "watch": "rollup -wc",
-	"prepublish": "npm run test && npm run build"
+    "prepublish": "npm run test && npm run build"
   },
   "repository": {
     "type": "git",
