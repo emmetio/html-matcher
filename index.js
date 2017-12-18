@@ -23,7 +23,7 @@ export const defaultOptions = {
 	 * in non-XML syntax
 	 * @type {Array}
 	 */
-	empty: ['img', 'meta', 'link', 'br', 'base', 'hr', 'area', 'wbr']
+	empty: ['img', 'meta', 'link', 'br', 'base', 'hr', 'area', 'wbr','col', 'embed', 'input', 'param', 'source', 'track']
 };
 
 /**
