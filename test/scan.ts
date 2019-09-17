@@ -1,4 +1,4 @@
-import scan, { ElementType, FastScanCallback } from '../src/scan';
+import { scan, ElementType, FastScanCallback } from '../src';
 import { deepStrictEqual as deepEqual } from 'assert';
 
 type TagRecord = [string, ElementType, number, number];

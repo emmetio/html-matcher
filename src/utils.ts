@@ -1,4 +1,6 @@
-import Scanner, { isSpace, isQuote, isAlpha, isNumber } from '@emmetio/scanner';
+import Scanner, { isSpace, isQuote, isAlpha, isNumber, eatPair } from '@emmetio/scanner';
+
+export type FastScanCallback = (name: string, type: ElementType, start: number, end: number) => false | any;
 
 export const enum ElementType {
     Open = 1,
@@ -35,6 +37,10 @@ export const enum Chars {
     Underscore = 95,
     /** `=` character */
     Equals = 61,
+    /** `*` character */
+    Asterisk = 42,
+    /** `#` character */
+    Hash = 35,
 }
 
 export interface ScannerOptions {
@@ -61,6 +67,9 @@ const defaultOptions: ScannerOptions = {
     special: ['script', 'style'],
     empty: ['img', 'meta', 'link', 'br', 'base', 'hr', 'area', 'wbr', 'col', 'embed', 'input', 'param', 'source', 'track']
 };
+
+/** Options for `Scanner` utils */
+export const opt = { throws: true };
 
 export function createOptions(opt: Partial<ScannerOptions> = {}): ScannerOptions {
     return { ...opt, ...defaultOptions };
@@ -147,6 +156,20 @@ export function nameChar(ch: number) {
 }
 
 /**
+ * Consumes identifier from given scanner
+ */
+export function ident(scanner: Scanner): boolean {
+    const start = scanner.pos;
+    if (scanner.eat(nameStartChar)) {
+        scanner.eatWhile(nameChar);
+        scanner.start = start;
+        return true;
+    }
+
+    return false;
+}
+
+/**
  * Check if given code is tag terminator
  */
 export function isTerminator(code: number): boolean {
@@ -158,4 +181,16 @@ export function isTerminator(code: number): boolean {
  */
 export function isUnquoted(code: number): boolean {
     return !isNaN(code) && !isQuote(code) && !isSpace(code) && !isTerminator(code);
+}
+
+/**
+ * Consumes paired tokens (like `[` and `]`) with respect of nesting and embedded
+ * quoted values
+ * @return `true` if paired token was consumed
+ */
+export function consumePaired(scanner: Scanner) {
+    return eatPair(scanner, Chars.LeftAngle, Chars.RightAngle, opt)
+        || eatPair(scanner, Chars.LeftRound, Chars.RightRound, opt)
+        || eatPair(scanner, Chars.LeftSquare, Chars.RightSquare, opt)
+        || eatPair(scanner, Chars.LeftCurly, Chars.RightCurly, opt);
 }

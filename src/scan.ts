@@ -1,21 +1,20 @@
-import Scanner, { isSpace, eatPair, eatQuoted } from '@emmetio/scanner';
-import { ElementType, Chars, consumeArray, toCharCodes, isUnquoted, isTerminator, nameStartChar, nameChar, consumeSection } from './utils';
+import Scanner, { isSpace } from '@emmetio/scanner';
+import { FastScanCallback, ElementType, Chars, consumeArray, toCharCodes, isTerminator, consumeSection, ident } from './utils';
+import { attributeName, attributeValue } from './attributes';
 
-export type FastScanCallback = (name: string, type: ElementType, start: number, end: number) => false | any;
 export { ElementType } from './utils';
 
 const cdataOpen = toCharCodes('<![CDATA[');
 const cdataClose = toCharCodes(']]>');
 const commentOpen = toCharCodes('<!--');
 const commentClose = toCharCodes('-->');
-const opt = { throws: true };
 
 /**
  * Performs fast scan of given source code: for each tag found it invokes callback
  * with tag name, its type (open, close, self-close) and range in original source.
- * Unlike regular scanner, fast scanner doesn’t provide info about attribute to
+ * Unlike regular scanner, fast scanner doesn’t provide info about attributes to
  * reduce object allocations hence increase performance.
- * If `callback` returns false, scanner stops parsing.
+ * If `callback` returns `false`, scanner stops parsing.
  * @param special List of “special” HTML tags which should be ignored. Most likely
  * it’s a "script" and "style" tags.
  */
@@ -102,49 +101,6 @@ function skipAttributes(scanner: Scanner) {
 }
 
 /**
- * Consumes identifier from given scanner
- */
-function ident(scanner: Scanner): boolean {
-    if (scanner.eat(nameStartChar)) {
-        scanner.eatWhile(nameChar);
-        return true;
-    }
-
-    return false;
-}
-
-/**
- * Skips attribute name from given scanner context
- */
-function attributeName(scanner: Scanner): boolean {
-    // Attribute name could be a regular name or expression:
-    // React-style – <div {...props}>
-    // Angular-style – <div [ng-for]>
-    return consumePaired(scanner) || ident(scanner);
-}
-
-/**
- * Skips attribute value
- */
-function attributeValue(scanner: Scanner) {
-    // Supported attribute values are quoted, React-like expressions (`{foo}`)
-    // or unquoted literals
-    return eatQuoted(scanner, opt) || consumePaired(scanner) || scanner.eatWhile(isUnquoted);
-}
-
-/**
- * Consumes paired tokens (like `[` and `]`) with respect of nesting and embedded
- * quoted values
- * @return `true` if paired token was consumed
- */
-function consumePaired(scanner: Scanner) {
-    return eatPair(scanner, Chars.LeftAngle, Chars.RightAngle, opt)
-        || eatPair(scanner, Chars.LeftRound, Chars.RightRound, opt)
-        || eatPair(scanner, Chars.LeftSquare, Chars.RightSquare, opt)
-        || eatPair(scanner, Chars.LeftCurly, Chars.RightCurly, opt);
-}
-
-/**
  * Consumes closing tag with given name from scanner
  */
 function consumeClosing(scanner: Scanner, name: number[]): boolean {
@@ -164,7 +120,6 @@ function consumeClosing(scanner: Scanner, name: number[]): boolean {
 function cdata(scanner: Scanner): boolean {
     return consumeSection(scanner, cdataOpen, cdataClose, true);
 }
-
 
 /**
  * Consumes comments from given scanner
