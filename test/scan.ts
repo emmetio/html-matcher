@@ -3,10 +3,10 @@ import { deepStrictEqual as deepEqual } from 'assert';
 
 type TagRecord = [string, ElementType, number, number];
 
-const getTags = (code: string) => {
+const getTags = (code: string, special?: string[]) => {
     const tags: TagRecord[] = [];
     const cb: FastScanCallback = (name, type, start, end) => tags.push([name, type, start, end]);
-    scan(code, cb);
+    scan(code, cb, special);
     return tags;
 }
 
@@ -40,5 +40,40 @@ describe('Scan', () => {
         deepEqual(getTags('</a>foo'), [['a', ElementType.Close, 0, 4]]);
         deepEqual(getTags('</a s>'), []);
         deepEqual(getTags('</a >'), []);
+    });
+
+    it('special tags', () => {
+        deepEqual(getTags('<a>foo</a><style><b></style><c>bar</c>', ['style']), [
+            ['a', ElementType.Open, 0, 3],
+            ['a', ElementType.Close, 6, 10],
+            ['style', ElementType.Open, 10, 17],
+            ['style', ElementType.Close, 20, 28],
+            ['c', ElementType.Open, 28, 31],
+            ['c', ElementType.Close, 34, 38]
+        ]);
+    });
+
+    it('CDATA', () => {
+        deepEqual(getTags('<a><![CDATA[<foo /><bar>]]><b>'), [
+            ['a', ElementType.Open, 0, 3],
+            ['b', ElementType.Open, 27, 30]
+        ]);
+
+        // Consume unclosed: still a CDATA
+        deepEqual(getTags('<a><![CDATA[<foo /><bar><b>'), [
+            ['a', ElementType.Open, 0, 3],
+        ]);
+    });
+
+    it('comments', () => {
+        deepEqual(getTags('<a><!-- <foo /><bar> --><b>'), [
+            ['a', ElementType.Open, 0, 3],
+            ['b', ElementType.Open, 24, 27]
+        ]);
+
+        // Consume unclosed: still a comment
+        deepEqual(getTags('<a><!-- <foo /><bar><b>'), [
+            ['a', ElementType.Open, 0, 3],
+        ]);
     });
 });
