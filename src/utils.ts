@@ -69,10 +69,10 @@ const defaultOptions: ScannerOptions = {
 };
 
 /** Options for `Scanner` utils */
-export const opt = { throws: true };
+export const opt = { throws: false };
 
 export function createOptions(opt: Partial<ScannerOptions> = {}): ScannerOptions {
-    return { ...opt, ...defaultOptions };
+    return { ...defaultOptions, ...opt };
 }
 
 /**

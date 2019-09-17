@@ -131,6 +131,9 @@ function comment(scanner: Scanner): boolean {
     return consumeSection(scanner, commentOpen, commentClose, true);
 }
 
+/**
+ * Consumes processing instruction from given scanner
+ */
 function processingInstruction(scanner: Scanner): boolean {
     if (consumeArray(scanner, piStart)) {
         while (!scanner.eof()) {

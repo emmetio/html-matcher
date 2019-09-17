@@ -4,8 +4,8 @@ import { Chars, ident, consumePaired, opt, isUnquoted } from './utils';
 export interface AttributeToken {
     name: string;
     value?: string;
-    nameStart?: number;
-    nameEnd?: number;
+    nameStart: number;
+    nameEnd: number;
     valueStart?: number;
     valueEnd?: number;
 }
