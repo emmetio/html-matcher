@@ -1,4 +1,4 @@
-import Scanner, { isSpace } from '@emmetio/scanner';
+import Scanner, { isSpace, eatQuoted } from '@emmetio/scanner';
 import { FastScanCallback, ElementType, Chars, consumeArray, toCharCodes, isTerminator, consumeSection, ident } from './utils';
 import { attributeName, attributeValue } from './attributes';
 
@@ -8,6 +8,9 @@ const cdataOpen = toCharCodes('<![CDATA[');
 const cdataClose = toCharCodes(']]>');
 const commentOpen = toCharCodes('<!--');
 const commentClose = toCharCodes('-->');
+const piStart = toCharCodes('<?');
+const piEnd = toCharCodes('?>');
+
 
 /**
  * Performs fast scan of given source code: for each tag found it invokes callback
@@ -28,7 +31,7 @@ export default function scan(source: string, callback: FastScanCallback, special
     let found = false;
 
     while (!scanner.eof()) {
-        if (cdata(scanner) || comment(scanner)) {
+        if (cdata(scanner) || comment(scanner) || processingInstruction(scanner)) {
             continue;
         }
 
@@ -126,4 +129,20 @@ function cdata(scanner: Scanner): boolean {
  */
 function comment(scanner: Scanner): boolean {
     return consumeSection(scanner, commentOpen, commentClose, true);
+}
+
+function processingInstruction(scanner: Scanner): boolean {
+    if (consumeArray(scanner, piStart)) {
+        while (!scanner.eof()) {
+            if (consumeArray(scanner, piEnd)) {
+                break;
+            }
+
+            eatQuoted(scanner) || scanner.pos++;
+        }
+
+        return true;
+    }
+
+    return false
 }
