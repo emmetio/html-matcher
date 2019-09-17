@@ -2,20 +2,27 @@
   "name": "@emmetio/html-matcher",
   "version": "0.3.3",
   "description": "Minimalistic and ultra-fast HTML parser & matcher",
-  "main": "dist/html-matcher.cjs.js",
-  "module": "dist/html-matcher.es.js",
+  "main": "./dist/html-matcher.cjs.js",
+  "module": "./dist/html-matcher.es.js",
+  "types": "./dist/index.d.ts",
   "devDependencies": {
     "@emmetio/scanner": "0.0.7",
     "@types/mocha": "^5.2.7",
     "@types/node": "^12.7.5",
     "mocha": "^6.2.0",
-    "rollup": "^1.21.3",
+    "rollup": "^1.21.4",
+    "rollup-plugin-node-resolve": "^5.2.0",
+    "rollup-plugin-typescript2": "^0.24.2",
     "ts-node": "^8.3.0",
     "tslint": "^5.20.0",
     "typescript": "^3.6.3"
   },
   "scripts": {
-    "test": "mocha"
+    "test": "mocha",
+    "lint": "tslint ./src/*.ts",
+    "build": "rollup -c",
+    "clean": "rm -f ./dist",
+    "prepare": "npm run lint && npm test && npm run clean && npm run build"
   },
   "repository": {
     "type": "git",

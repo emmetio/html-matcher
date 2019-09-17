@@ -11,7 +11,6 @@ const commentClose = toCharCodes('-->');
 const piStart = toCharCodes('<?');
 const piEnd = toCharCodes('?>');
 
-
 /**
  * Performs fast scan of given source code: for each tag found it invokes callback
  * with tag name, its type (open, close, self-close) and range in original source.
@@ -147,5 +146,5 @@ function processingInstruction(scanner: Scanner): boolean {
         return true;
     }
 
-    return false
+    return false;
 }

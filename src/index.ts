@@ -70,9 +70,9 @@ export default function match(source: string, pos: number, opt?: Partial<Scanner
                         close: [start, end]
                     };
                     return false;
-                } else {
+                } else if (stack.length) {
                     // Release tag object for further re-use
-                    pool.push(stack.pop());
+                    pool.push(stack.pop()!);
                 }
             }
         }
@@ -91,14 +91,14 @@ function getAttributes(source: string, start: number, end: number): AttributeTok
         attr.nameStart += start;
         attr.nameEnd += start;
         if (attr.value != null) {
-            attr.valueStart += start;
-            attr.valueEnd += start;
+            attr.valueStart! += start;
+            attr.valueEnd! += start;
         }
     });
 
     return tokens;
 }
 
-function last<T>(arr: T[]): T | void {
+function last<T>(arr: T[]): T | null {
     return arr.length ? arr[arr.length - 1] : null;
 }

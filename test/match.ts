@@ -18,14 +18,14 @@ const xml = `<ul>
 
 describe('Match', () => {
     it('html', () => {
-        let tag = match(html, 12);
+        let tag = match(html, 12)!;
         equal(tag.name, 'li');
         deepEqual(tag.attributes, []);
         deepEqual(tag.open, [9, 13]);
         deepEqual(tag.close, [79, 84]);
 
         // Match `<img>` tag. Since in HTML mode, it should be handled as self-closed
-        tag = match(html, 37);
+        tag = match(html, 37)!;
         equal(tag.name, 'img');
         deepEqual(tag.attributes, [{
             name: 'src',
@@ -38,7 +38,7 @@ describe('Match', () => {
         deepEqual(tag.open, [29, 48]);
         deepEqual(tag.close, undefined);
 
-        tag = match(html, 116);
+        tag = match(html, 116)!;
         equal(tag.name, 'a');
         deepEqual(tag.attributes, [{
             name: 'href',
@@ -55,7 +55,7 @@ describe('Match', () => {
     it('xml', () => {
         // Should match <img> tag, since we’re in XML mode, matcher should look
         // for closing `</img>` tag
-        let tag = match(xml, 42, { xml: true });
+        let tag = match(xml, 42, { xml: true })!;
         equal(tag.name, 'img');
         deepEqual(tag.attributes, [{
             name: 'src',
@@ -68,7 +68,7 @@ describe('Match', () => {
         deepEqual(tag.open, [37, 56]);
         deepEqual(tag.close, [99, 105]);
 
-        tag = match(xml, 70, { xml: true });
+        tag = match(xml, 70, { xml: true })!;
         equal(tag.name, 'link');
         deepEqual(tag.attributes, [{
             name: 'rel',

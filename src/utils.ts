@@ -6,7 +6,7 @@ export const enum ElementType {
     Open = 1,
     Close = 2,
     SelfClose = 3
-};
+}
 
 export const enum Chars {
     /** `-` character */
@@ -57,8 +57,10 @@ export interface ScannerOptions {
      */
     special: string[];
 
-    /** List of elements that should be treated as empty (e.g. without closing tag)
-     * in non-XML syntax */
+    /**
+     * List of elements that should be treated as empty (e.g. without closing tag)
+     * in non-XML syntax
+     */
     empty: string[];
 }
 
@@ -71,8 +73,8 @@ const defaultOptions: ScannerOptions = {
 /** Options for `Scanner` utils */
 export const opt = { throws: false };
 
-export function createOptions(opt: Partial<ScannerOptions> = {}): ScannerOptions {
-    return { ...defaultOptions, ...opt };
+export function createOptions(options: Partial<ScannerOptions> = {}): ScannerOptions {
+    return { ...defaultOptions, ...options };
 }
 
 /**
@@ -129,7 +131,7 @@ export function consumeSection(scanner: Scanner, open: number[], close: number[]
 
     // unable to find section, revert to initial position
     scanner.pos = start;
-    return null;
+    return false;
 }
 
 /**
@@ -152,7 +154,7 @@ export function nameChar(ch: number) {
     // Limited XML spec: https://www.w3.org/TR/xml/#NT-NameChar
     return nameStartChar(ch) || ch === Chars.Dash || ch === Chars.Dot || isNumber(ch)
         || ch === 0xB7
-        || (ch >= 0x0300 && ch <= 0x036F)
+        || (ch >= 0x0300 && ch <= 0x036F);
 }
 
 /**

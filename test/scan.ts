@@ -8,7 +8,7 @@ const getTags = (code: string, special?: string[]) => {
     const cb: FastScanCallback = (name, type, start, end) => tags.push([name, type, start, end]);
     scan(code, cb, special);
     return tags;
-}
+};
 
 describe('Scan', () => {
     it('open tag', () => {

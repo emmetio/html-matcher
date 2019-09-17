@@ -33,6 +33,6 @@ describe('Attributes', () => {
                 valueStart: 31,
                 valueEnd: 32
             }
-        ])
+        ]);
     });
 });
