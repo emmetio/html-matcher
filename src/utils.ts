@@ -58,6 +58,12 @@ export interface ScannerOptions {
     special: string[];
 
     /**
+     * List of `type` attribute values which, if present, make matched “special” tag
+     * regular one, i.e. disables special treatment
+     */
+    nonSpecialType: string[];
+
+    /**
      * List of elements that should be treated as empty (e.g. without closing tag)
      * in non-XML syntax
      */
@@ -67,6 +73,7 @@ export interface ScannerOptions {
 const defaultOptions: ScannerOptions = {
     xml: false,
     special: ['script', 'style'],
+    nonSpecialType: ['text/html', 'text/template', 'text/x-template'],
     empty: ['img', 'meta', 'link', 'br', 'base', 'hr', 'area', 'wbr', 'col', 'embed', 'input', 'param', 'source', 'track']
 };
 

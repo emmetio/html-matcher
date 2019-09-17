@@ -1,3 +1,4 @@
+import { isQuote } from '@emmetio/scanner';
 import { ScannerOptions, ElementType, createOptions } from './utils';
 import scan from './scan';
 import attributes, { AttributeToken } from './attributes';
@@ -32,6 +33,9 @@ export default function match(source: string, pos: number, opt?: Partial<Scanner
     const stack: Tag[] = [];
     const options = createOptions(opt);
     let result: MatchedTag | null = null;
+
+    // Check if given tag is special
+    const special = isSpecial(options);
 
     scan(source, (name, type, start, end) => {
         let endOffset = 0;
@@ -76,10 +80,25 @@ export default function match(source: string, pos: number, opt?: Partial<Scanner
                 }
             }
         }
-    }, options.special);
+    }, special);
 
     stack.length = pool.length = 0;
     return result;
+}
+
+/**
+ * Creates function that check if given element is special
+ */
+export function isSpecial(options: ScannerOptions) {
+    return (name: string, src: string, start: number, end: number) => {
+        if (options.special.includes(name)) {
+            const attrs = getAttributes(src, start + name.length + 1, end - 1);
+            const value = getAttributeValue(attrs, 'type');
+            return !options.nonSpecialType.includes(value || '');
+        }
+
+        return false;
+    };
 }
 
 /**
@@ -97,6 +116,29 @@ function getAttributes(source: string, start: number, end: number): AttributeTok
     });
 
     return tokens;
+}
+
+/**
+ * Returns clean (unquoted) value of `name` attribute
+ */
+function getAttributeValue(attrs: AttributeToken[], name: string): string | undefined {
+    for (let i = 0; i < attrs.length; i++) {
+        const attr = attrs[i];
+        if (attr.name === name) {
+            let value = attr.value;
+            if (value) {
+                // Trim quotes
+                if (isQuote(value.charCodeAt(0))) {
+                    value = value.slice(1);
+                }
+
+                if (isQuote(value.charCodeAt(value.length - 1))) {
+                    value = value.slice(0, -1);
+                }
+            }
+            return value;
+        }
+    }
 }
 
 function last<T>(arr: T[]): T | null {

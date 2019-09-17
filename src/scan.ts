@@ -2,7 +2,7 @@ import Scanner, { isSpace, eatQuoted } from '@emmetio/scanner';
 import { FastScanCallback, ElementType, Chars, consumeArray, toCharCodes, isTerminator, consumeSection, ident } from './utils';
 import { attributeName, attributeValue } from './attributes';
 
-export { ElementType } from './utils';
+type SpecialCallback = (name: string, source: string, start: number, end: number) => boolean;
 
 const cdataOpen = toCharCodes('<![CDATA[');
 const cdataClose = toCharCodes(']]>');
@@ -20,7 +20,7 @@ const piEnd = toCharCodes('?>');
  * @param special List of “special” HTML tags which should be ignored. Most likely
  * it’s a "script" and "style" tags.
  */
-export default function scan(source: string, callback: FastScanCallback, special?: string[]) {
+export default function scan(source: string, callback: FastScanCallback, special?: SpecialCallback) {
     const scanner = new Scanner(source);
     let type: ElementType;
     let name: string;
@@ -58,7 +58,7 @@ export default function scan(source: string, callback: FastScanCallback, special
                         break;
                     }
 
-                    if (type === ElementType.Open && special && special.includes(name)) {
+                    if (type === ElementType.Open && special && special(name, source, start, scanner.pos)) {
                         // Found opening tag of special element: we should skip
                         // scanner contents until we find closing tag
                         nameCodes = toCharCodes(name);
