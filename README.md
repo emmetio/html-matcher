@@ -1,69 +1,48 @@
-# Minimalistic and ultra-fast HTML parser & matcher
+# Small and fast HTML matcher
 
-The goal of this project is to provide minimalistic and fast HTML/XML parser with that holds source mapping of matched tags and its attributes. The project is optimized for finding HTML/XML tag pairs from arbitrary position in source code. Also, it can be used for parsing full document into DOM.
-
-Example:
+Finds matching opening and closing tag pair for given location in HTML/XML source:
 
 ```js
-import { findPair } from '@emmetio/html-matcher';
+import match from '@emmetio/html-matcher';
 
 const content = '<div><a href="http://emmet.io">Example</a></div>';
 
-// find tag pair at character 35
-const match = findPair(content, 35);
+// Find tag pair at character 35
+const tag = match(content, 35);
 
-console.log(m.type); // "tag", may also return "comment"
-console.log(m.start); // { cursor: 0, pos: 5 }
-console.log(m.end); // { cursor: 0, pos: 42 }
+console.log(tag.name); // Name of matched tag: "a"
+console.log(tag.open); // Range of opening tag: [5, 31]
+console.log(tag.end); // Range of opening tag: [38, 42]
 
-// get open and close parts
-console.log(m.open.name.value); // "a"
-console.log(m.open.name.start); // { cursor: 0, pos: 6 }
-console.log(m.open.name.end); // { cursor: 0, pos: 7 }
+// List of attributes found in opening tag
+console.log(tag.attributes);
 ```
 
-All token locations are represented as `{cursor, pos}` object where `cursor` is a pointer to a code chunk in content reader and `pos` is a character location in given code chunk (see below).
-
-## Content Reader
-
-HTML Matcher is designed to work inside text editors. Most editors holds source code as a set of code chunks (lines of code in most cases) to optimize its parsing and rendering. Getting a full source code from editor might be very resource-consuming, especially on large files.
-
-To overcome this problem, you may pass *content reader* instead of string as data source. Content reader is an object with the following interface:
+By default, matcher works in HTML, which means if it finds tag name which is known to be empty (for example, `<img>`) it will not search for it’s closing part. However, such behavior might be unexpected for XML syntaxes where all tags should be either self-closed or provide closing part. In this case, you should pass `xml: true` option to properly handle XML mode:
 
 ```js
-const lines = 'foo\nbar\nbaz'.split('\n').map(line => line + '\n');
+import match from '@emmetio/html-matcher';
 
-const contentReader = {
-	cursor: 0, // a pointer to a data chunk
+const content = '<div><img>Caption</img></div>';
+const html = match(content, 8);
+const xml = match(content, 8, { xml: true });
 
-	// Returns a code chunk for given cursor
-	charCodeAt(cursor, pos) {
-		return lines[cursor].charCodeAt(pos);
-	}
+console.log(html.name); // "img"
+console.log(html.open); // [5, 10]
+console.log(html.close); // undefined
 
-	// Returns length of code chunk, identified by `cursor`
-	length(cursor) {
-		return lines[cursor].length;
-	}
-
-	substring(from, to) {
-		
-	}
-
-	// Returns cursor for next code chunk from given cursor
-	// or `null` if there’s no next chunk
-	next(cursor) {
-		cursor++;
-		return cursor < lines.length ? cursor : null;
-	}
-
-	// Returns cursor for previous code chunk from given cursor
-	// or `null` if there’s no previous chunk
-	prev(cursor) {
-		cursor--;
-		return cursor >= 0 ? cursor : null;
-	}
-}
+console.log(xml.name); // "img"
+console.log(xml.open); // [5, 10]
+console.log(xml.close); // [17, 23]
 ```
 
-*TBD*
+## Special tags
+
+In HTML, some tags has special meaning. For example, a `<script>` tag: its contents should be completely ignored until we find closing `</script>` tag. By default, matcher understands `script` and `style` tags as “special” but you can override them with `special` option:
+
+```js
+import match from '@emmetio/html-matcher';
+
+// Treat `<foo-bar>` tag as ”special”: skip its content until `</foo-bar>`. Note that this option overwrites default value with `['script', 'style']` value
+match('...', 10, { special: ['foo-bar'] });
+```
