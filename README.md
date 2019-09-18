@@ -12,7 +12,7 @@ const tag = match(content, 35);
 
 console.log(tag.name); // Name of matched tag: "a"
 console.log(tag.open); // Range of opening tag: [5, 31]
-console.log(tag.end); // Range of opening tag: [38, 42]
+console.log(tag.end); // Range of closing tag: [38, 42]
 
 // List of attributes found in opening tag
 console.log(tag.attributes);
