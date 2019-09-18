@@ -75,7 +75,7 @@ const defaultOptions: ScannerOptions = {
     xml: false,
     special: {
         style: null,
-        script: ['', 'text/javascript', 'javascript', 'typescript', 'ts', 'coffee', 'coffeescript']
+        script: ['', 'text/javascript', 'application/x-javascript', 'javascript', 'typescript', 'ts', 'coffee', 'coffeescript']
     },
     empty: ['img', 'meta', 'link', 'br', 'base', 'hr', 'area', 'wbr', 'col', 'embed', 'input', 'param', 'source', 'track']
 };
