@@ -1,5 +1,5 @@
 import Scanner, { eatQuoted, isSpace } from '@emmetio/scanner';
-import { Chars, ident, consumePaired, opt, isUnquoted } from './utils';
+import { Chars, ident, consumePaired, opt, isUnquoted, getUnquotedValue } from './utils';
 
 export interface AttributeToken {
     name: string;
@@ -69,6 +69,18 @@ export function attributeValue(scanner: Scanner) {
     // Supported attribute values are quoted, React-like expressions (`{foo}`)
     // or unquoted literals
     return eatQuoted(scanner, opt) || consumePaired(scanner) || unquoted(scanner);
+}
+
+/**
+ * Returns clean (unquoted) value of `name` attribute
+ */
+export function getAttributeValue(attrs: AttributeToken[], name: string): string | undefined {
+    for (let i = 0; i < attrs.length; i++) {
+        const attr = attrs[i];
+        if (attr.name === name) {
+            return attr.value && getUnquotedValue(attr.value);
+        }
+    }
 }
 
 /**

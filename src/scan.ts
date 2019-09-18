@@ -1,8 +1,6 @@
 import Scanner, { isSpace, eatQuoted } from '@emmetio/scanner';
-import { FastScanCallback, ElementType, Chars, consumeArray, toCharCodes, isTerminator, consumeSection, ident } from './utils';
-import { attributeName, attributeValue } from './attributes';
-
-type SpecialCallback = (name: string, source: string, start: number, end: number) => boolean;
+import { FastScanCallback, ElementType, Chars, consumeArray, toCharCodes, isTerminator, consumeSection, ident, SpecialType } from './utils';
+import attributes, { attributeName, attributeValue, getAttributeValue } from './attributes';
 
 const cdataOpen = toCharCodes('<![CDATA[');
 const cdataClose = toCharCodes(']]>');
@@ -20,7 +18,7 @@ const piEnd = toCharCodes('?>');
  * @param special List of “special” HTML tags which should be ignored. Most likely
  * it’s a "script" and "style" tags.
  */
-export default function scan(source: string, callback: FastScanCallback, special?: SpecialCallback) {
+export default function scan(source: string, callback: FastScanCallback, special?: SpecialType) {
     const scanner = new Scanner(source);
     let type: ElementType;
     let name: string;
@@ -58,7 +56,7 @@ export default function scan(source: string, callback: FastScanCallback, special
                         break;
                     }
 
-                    if (type === ElementType.Open && special && special(name, source, start, scanner.pos)) {
+                    if (type === ElementType.Open && special && isSpecial(special, name, source, start, scanner.pos)) {
                         // Found opening tag of special element: we should skip
                         // scanner contents until we find closing tag
                         nameCodes = toCharCodes(name);
@@ -144,6 +142,23 @@ function processingInstruction(scanner: Scanner): boolean {
         }
 
         return true;
+    }
+
+    return false;
+}
+
+/**
+ * Check if given tag name should be considered as special
+ */
+function isSpecial(special: SpecialType, name: string, source: string, start: number, end: number): boolean {
+    if (name in special) {
+        const typeValues = special[name];
+        if (!typeValues) {
+            return true;
+        }
+
+        const attrs = attributes(source.substring(start + name.length + 1, end - 1));
+        return typeValues.includes(getAttributeValue(attrs, 'type') || '');
     }
 
     return false;

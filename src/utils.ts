@@ -8,6 +8,10 @@ export const enum ElementType {
     SelfClose = 3
 }
 
+export interface SpecialType {
+    [tagName: string]: string[] | null;
+}
+
 export const enum Chars {
     /** `-` character */
     Dash = 45,
@@ -53,15 +57,12 @@ export interface ScannerOptions {
 
     /**
      * List of tags that should have special parsing rules, e.g. should not parse
-     * inner content and skip to closing tag
+     * inner content and skip to closing tag. Key is a tag name that should be
+     * considered special and value is either empty (always mark element as special)
+     * or list of `type` attribute values, which, if present with one of this value,
+     * make element special
      */
-    special: string[];
-
-    /**
-     * List of `type` attribute values which, if present, make matched “special” tag
-     * regular one, i.e. disables special treatment
-     */
-    nonSpecialType: string[];
+    special: SpecialType;
 
     /**
      * List of elements that should be treated as empty (e.g. without closing tag)
@@ -72,8 +73,10 @@ export interface ScannerOptions {
 
 const defaultOptions: ScannerOptions = {
     xml: false,
-    special: ['script', 'style'],
-    nonSpecialType: ['text/html', 'text/template', 'text/x-template'],
+    special: {
+        style: null,
+        script: ['', 'text/javascript', 'javascript', 'typescript', 'ts', 'coffee', 'coffeescript']
+    },
     empty: ['img', 'meta', 'link', 'br', 'base', 'hr', 'area', 'wbr', 'col', 'embed', 'input', 'param', 'source', 'track']
 };
 
@@ -202,4 +205,20 @@ export function consumePaired(scanner: Scanner) {
         || eatPair(scanner, Chars.LeftRound, Chars.RightRound, opt)
         || eatPair(scanner, Chars.LeftSquare, Chars.RightSquare, opt)
         || eatPair(scanner, Chars.LeftCurly, Chars.RightCurly, opt);
+}
+
+/**
+ * Returns unquoted value of given string
+ */
+export function getUnquotedValue(value: string): string {
+    // Trim quotes
+    if (isQuote(value.charCodeAt(0))) {
+        value = value.slice(1);
+    }
+
+    if (isQuote(value.charCodeAt(value.length - 1))) {
+        value = value.slice(0, -1);
+    }
+
+    return value;
 }

@@ -1,4 +1,4 @@
-import { scan, ElementType, FastScanCallback, isSpecial, ScannerOptions, createOptions } from '../src';
+import { scan, ElementType, FastScanCallback, ScannerOptions, createOptions } from '../src';
 import { deepStrictEqual as deepEqual } from 'assert';
 
 type TagRecord = [string, ElementType, number, number];
@@ -6,9 +6,7 @@ type TagRecord = [string, ElementType, number, number];
 const getTags = (code: string, opt: Partial<ScannerOptions> = {}) => {
     const tags: TagRecord[] = [];
     const cb: FastScanCallback = (name, type, start, end) => tags.push([name, type, start, end]);
-    const special = isSpecial(createOptions(opt));
-
-    scan(code, cb, special);
+    scan(code, cb, createOptions(opt).special);
     return tags;
 };
 
@@ -45,7 +43,7 @@ describe('Scan', () => {
     });
 
     it('special tags', () => {
-        deepEqual(getTags('<a>foo</a><style><b></style><c>bar</c>', { special: ['style'] }), [
+        deepEqual(getTags('<a>foo</a><style><b></style><c>bar</c>'), [
             ['a', ElementType.Open, 0, 3],
             ['a', ElementType.Close, 6, 10],
             ['style', ElementType.Open, 10, 17],
@@ -54,20 +52,14 @@ describe('Scan', () => {
             ['c', ElementType.Close, 34, 38]
         ]);
 
-        // Disable spacial tags with attributes
-        const opt: Partial<ScannerOptions> = {
-            special: ['script'],
-            nonSpecialType: ['text/x-foo']
-        };
-
-        deepEqual(getTags('<script><a></script><script type="text/x-foo"><b></script><script type="x-foo"><c></script>', opt), [
+        deepEqual(getTags('<script><a></script><script type="text/x-foo"><b></script><script type="javascript"><c></script>'), [
             ['script', ElementType.Open, 0, 8],
             ['script', ElementType.Close, 11, 20],
             ['script', ElementType.Open, 20, 46],
             ['b', ElementType.Open, 46, 49],
             ['script', ElementType.Close, 49, 58],
-            ['script', ElementType.Open, 58, 79],
-            ['script', ElementType.Close, 82, 91],
+            ['script', ElementType.Open, 58, 84],
+            ['script', ElementType.Close, 87, 96],
         ]);
     });
 
