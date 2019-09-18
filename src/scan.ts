@@ -153,7 +153,7 @@ function processingInstruction(scanner: Scanner): boolean {
 function isSpecial(special: SpecialType, name: string, source: string, start: number, end: number): boolean {
     if (name in special) {
         const typeValues = special[name];
-        if (!typeValues) {
+        if (!Array.isArray(typeValues)) {
             return true;
         }
 

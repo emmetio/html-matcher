@@ -38,11 +38,13 @@ console.log(xml.close); // [17, 23]
 
 ## Special tags
 
-In HTML, some tags has special meaning. For example, a `<script>` tag: its contents should be completely ignored until we find closing `</script>` tag. By default, matcher understands `script` and `style` tags as “special” but you can override them with `special` option:
+In HTML, some tags has special meaning. For example, a `<script>` tag: its contents should be completely ignored until we find closing `</script>` tag. But, if `<script>` tag contains unknown `type` attribute value, we should consider it as a regular tag.  By default, matcher understands `script` and `style` tags as “special” but you can override them with `special` option:
 
 ```js
 import match from '@emmetio/html-matcher';
 
 // Treat `<foo-bar>` tag as ”special”: skip its content until `</foo-bar>`. Note that this option overwrites default value with `['script', 'style']` value
-match('...', 10, { special: ['foo-bar'] });
+match('...', 10, { special: { 'foo-bar': null } });
 ```
+
+The `special` option is an object where key is a tag name and value is an array of `type` attribute values which, if present in tag, will make it special. If array is not provided, all instances of tag with given name will be considered as special.
