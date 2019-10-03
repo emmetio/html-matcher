@@ -51,11 +51,9 @@ export default function match(source: string, pos: number, opt?: Partial<Scanner
     let result: MatchedTag | null = null;
 
     scan(source, (name, type, start, end) => {
-        let endOffset = 0;
         if (type === ElementType.Open && isSelfClose(name, options)) {
             // Found empty element in HTML mode, mark is as self-closing
             type = ElementType.SelfClose;
-            endOffset = 1;
         }
 
         if (type === ElementType.Open) {
@@ -66,7 +64,7 @@ export default function match(source: string, pos: number, opt?: Partial<Scanner
                 // Matched given self-closing tag
                 result = {
                     name,
-                    attributes: getAttributes(source, start + name.length + 1, end - 2 + endOffset),
+                    attributes: getAttributes(source, start, end, name),
                     open: [start, end]
                 };
                 return false;
@@ -78,7 +76,7 @@ export default function match(source: string, pos: number, opt?: Partial<Scanner
                 if (tag.start < pos && pos < end) {
                     result = {
                         name,
-                        attributes: getAttributes(source, tag.start + name.length + 1, tag.end - 1),
+                        attributes: getAttributes(source, tag.start, tag.end, name),
                         open: [tag.start, tag.end],
                         close: [start, end]
                     };
@@ -248,8 +246,8 @@ function releaseTag(pool: Tag[], tag: Tag) {
 /**
  * Returns parsed attributes from given source
  */
-function getAttributes(source: string, start: number, end: number): AttributeToken[] {
-    const tokens = attributes(source.slice(start, end));
+function getAttributes(source: string, start: number, end: number, name?: string): AttributeToken[] {
+    const tokens = attributes(source.slice(start, end), name);
     tokens.forEach(attr => {
         attr.nameStart += start;
         attr.nameEnd += start;

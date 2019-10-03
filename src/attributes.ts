@@ -12,12 +12,20 @@ export interface AttributeToken {
 
 /**
  * Parses given string as list of HTML attributes.
- * @param src A fragment between element name and tag closing angle.
- * E.g., for `<a foo="bar">` tag it must be ` foo="bar"`
+ * @param src A fragment to parse. If `name` argument is provided, it must be an
+ * opening tag (`<a foo="bar">`), otherwise it should be a fragment between element
+ * name and tag closing angle (`foo="bar"`)
+ * @param name Tag name
  */
-export default function attributes(src: string): AttributeToken[] {
+export default function attributes(src: string, name?: string): AttributeToken[] {
     const result: AttributeToken[] = [];
-    const scanner = new Scanner(src);
+    let start = 0;
+    let end = src.length;
+    if (name) {
+        start = name.length + 1;
+        end -= src.slice(-2) === '/>' ? 2 : 1;
+    }
+    const scanner = new Scanner(src, start, end);
 
     while (!scanner.eof()) {
         scanner.eatWhile(isSpace);
