@@ -16,6 +16,15 @@ export interface MatchedTag {
     close?: [number, number];
 }
 
+export interface BalancedTag {
+    /** Name of balanced tag */
+    name: string;
+    /** Range of opening tag */
+    open: [number, number];
+    /** Range of closing tag. If absent, tag is self-closing */
+    close?: [number, number];
+}
+
 interface Tag {
     name: string;
     start: number;
@@ -35,7 +44,7 @@ export default function match(source: string, pos: number, opt?: Partial<Scanner
 
     scan(source, (name, type, start, end) => {
         let endOffset = 0;
-        if (type === ElementType.Open && !options.xml && options.empty.includes(name)) {
+        if (type === ElementType.Open && isSelfClose(name, options)) {
             // Found empty element in HTML mode, mark is as self-closing
             type = ElementType.SelfClose;
             endOffset = 1;
@@ -43,11 +52,7 @@ export default function match(source: string, pos: number, opt?: Partial<Scanner
 
         if (type === ElementType.Open) {
             // Allocate tag object from pool
-            const tag = pool.length ? pool.pop()! : { name: '', start: 0, end: 0 };
-            tag.name = name;
-            tag.start = start;
-            tag.end = end;
-            stack.push(tag);
+            stack.push(allocTag(pool, name, start, end));
         } else if (type === ElementType.SelfClose) {
             if (start < pos && pos < end) {
                 // Matched given self-closing tag
@@ -72,7 +77,7 @@ export default function match(source: string, pos: number, opt?: Partial<Scanner
                     return false;
                 } else if (stack.length) {
                     // Release tag object for further re-use
-                    pool.push(stack.pop()!);
+                    releaseTag(pool, stack.pop()!);
                 }
             }
         }
@@ -80,6 +85,61 @@ export default function match(source: string, pos: number, opt?: Partial<Scanner
 
     stack.length = pool.length = 0;
     return result;
+}
+
+/**
+ * Returns balanced tag model: a list of all XML/HTML tags that could possibly match
+ * given location when moving in outward direction
+ */
+export function balancedOutward(source: string, pos: number, opt?: Partial<ScannerOptions>): BalancedTag[] {
+    const pool: Tag[] = [];
+    const stack: Tag[] = [];
+    const options = createOptions(opt);
+    const result: BalancedTag[] = [];
+
+    scan(source, (name, type, start, end) => {
+        if (type === ElementType.Close) {
+            const tag = last(stack);
+            if (tag && tag.name === name) { // XXX check for invalid tag names?
+                // Matching closing tag found, check if matched pair is a candidate
+                // for outward balancing
+                if (tag.start < pos && pos < end) {
+                    result.push({
+                        name,
+                        open: [tag.start, tag.end],
+                        close: [start, end]
+                    });
+                }
+            }
+            // Release tag object for further re-use
+            releaseTag(pool, stack.pop()!);
+        } else if (type === ElementType.SelfClose || isSelfClose(name, options)) {
+            if (start < pos && pos < end) {
+                // Matched self-closed tag
+                result.push({ name, open: [start, end] });
+            }
+        } else {
+            stack.push(allocTag(pool, name, start, end));
+        }
+    }, options.special);
+
+    stack.length = pool.length = 0;
+    return result;
+}
+
+function allocTag(pool: Tag[], name: string, start: number, end: number): Tag {
+    if (pool.length) {
+        const tag = pool.pop()!;
+        tag.name = name;
+        tag.start = start;
+        tag.end = end;
+        return tag;
+    }
+    return { name, start, end };
+}
+
+function releaseTag(pool: Tag[], tag: Tag) {
+    pool.push(tag);
 }
 
 /**
@@ -97,6 +157,13 @@ function getAttributes(source: string, start: number, end: number): AttributeTok
     });
 
     return tokens;
+}
+
+/**
+ * Check if given tag is self-close for current parsing context
+ */
+function isSelfClose(name: string, options: ScannerOptions) {
+    return !options.xml && options.empty.includes(name);
 }
 
 function last<T>(arr: T[]): T | null {
