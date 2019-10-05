@@ -174,7 +174,7 @@ export function balancedInward(source: string, pos: number, opt?: Partial<Scanne
             if (tag.name === name) { // XXX check for invalid tag names?
                 // Matching closing tag found, check if matched pair is a candidate
                 // for outward balancing
-                if (tag.ranges[0] < pos && pos < end) {
+                if (tag.ranges[0] <= pos && pos <= end) {
                     result.push({
                         name,
                         open: tag.ranges.slice(0, 2) as TagRange,

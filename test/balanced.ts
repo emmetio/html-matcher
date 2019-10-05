@@ -27,7 +27,11 @@ describe('Balanced models', () => {
     });
 
     it('inward', () => {
-        deepEqual(inward(doc, 0), []);
+        deepEqual(inward(doc, 0), [
+            { name: 'ul', open: [0, 4], close: [179, 184] },
+            { name: 'li', open: [6, 10], close: [25, 30] },
+            { name: 'a', open: [10, 21], close: [21, 25] }
+        ]);
 
         deepEqual(inward(doc, 1), [
             { name: 'ul', open: [0, 4], close: [179, 184] },
