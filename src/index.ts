@@ -2,7 +2,7 @@ import { ScannerOptions, ElementType, createOptions } from './utils';
 import scan from './scan';
 import attributes, { AttributeToken } from './attributes';
 
-export { scan, attributes };
+export { scan, attributes, AttributeToken };
 export { createOptions, ScannerOptions, ElementType, FastScanCallback } from './utils';
 
 type TagRange = [number, number];
@@ -135,7 +135,7 @@ export function balancedOutward(source: string, pos: number, opt?: Partial<Scann
 
 /**
  * Returns balanced tag model: a list of all XML/HTML tags that could possibly match
- * given location when moving in outward direction
+ * given location when moving in inward direction
  */
 export function balancedInward(source: string, pos: number, opt?: Partial<ScannerOptions>): BalancedTag[] {
     // Collecting tags for inward balancing is a bit trickier: we have to store
