@@ -5,8 +5,10 @@
   "main": "./dist/html-matcher.cjs.js",
   "module": "./dist/html-matcher.es.js",
   "types": "./dist/index.d.ts",
+  "dependencies": {
+    "@emmetio/scanner": "0.0.7"
+  },
   "devDependencies": {
-    "@emmetio/scanner": "0.0.7",
     "@types/mocha": "^5.2.7",
     "@types/node": "^12.7.5",
     "mocha": "^6.2.0",
