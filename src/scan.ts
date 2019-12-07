@@ -21,20 +21,31 @@ const piEnd = toCharCodes('?>');
 export default function scan(source: string, callback: FastScanCallback, options?: ScannerOptions) {
     const scanner = new Scanner(source);
     const special = options ? options.special : null;
+    const allTokens = options ? options.allTokens : false;
     let type: ElementType;
     let name: string;
     let nameStart: number;
     let nameEnd: number;
     let nameCodes: number[];
     let found = false;
+    let piName: string | null = null;
 
     while (!scanner.eof()) {
-        if (cdata(scanner) || comment(scanner) || processingInstruction(scanner)) {
-            continue;
-        }
-
         const start = scanner.pos;
-        if (scanner.eat(Chars.LeftAngle)) {
+
+        if (cdata(scanner)) {
+            if (allTokens && callback('#cdata', ElementType.CData, scanner.start, scanner.pos) === false) {
+                break;
+            }
+        } else if (comment(scanner)) {
+            if (allTokens && callback('#comment', ElementType.Comment, scanner.start, scanner.pos) === false) {
+                break;
+            }
+        } else if (piName = processingInstruction(scanner)) {
+            if (allTokens && callback(piName, ElementType.ProcessingInstruction, scanner.start, scanner.pos) === false) {
+                break;
+            }
+        } else if (scanner.eat(Chars.LeftAngle)) {
             // Maybe a tag name?
             type = scanner.eat(Chars.Slash) ? ElementType.Close : ElementType.Open;
             nameStart = scanner.pos;
@@ -130,10 +141,13 @@ function comment(scanner: Scanner): boolean {
 }
 
 /**
- * Consumes processing instruction from given scanner
+ * Consumes processing instruction from given scanner. If consumed, returns
+ * processing instruction name
  */
-function processingInstruction(scanner: Scanner): boolean {
-    if (consumeArray(scanner, piStart)) {
+function processingInstruction(scanner: Scanner): string | null {
+    const start = scanner.pos;
+    if (consumeArray(scanner, piStart) && ident(scanner)) {
+        const name = scanner.current();
         while (!scanner.eof()) {
             if (consumeArray(scanner, piEnd)) {
                 break;
@@ -142,10 +156,12 @@ function processingInstruction(scanner: Scanner): boolean {
             eatQuoted(scanner) || scanner.pos++;
         }
 
-        return true;
+        scanner.start = start;
+        return name;
     }
 
-    return false;
+    scanner.pos = start;
+    return null;
 }
 
 /**

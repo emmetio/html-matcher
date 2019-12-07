@@ -86,4 +86,18 @@ describe('Scan', () => {
             ['a', ElementType.Open, 0, 3],
         ]);
     });
+
+    it('all tokens', () => {
+        deepEqual(getTags('<?xml version="1.0"?><a><!-- <foo /><bar> --><b>'), [
+            ['a', ElementType.Open, 21, 24],
+            ['b', ElementType.Open, 45, 48]
+        ]);
+
+        deepEqual(getTags('<?xml version="1.0"?><a><!-- <foo /><bar> --><b>', { allTokens: true }), [
+            ['xml', ElementType.ProcessingInstruction, 0, 21],
+            ['a', ElementType.Open, 21, 24],
+            ['#comment', ElementType.Comment, 24, 45],
+            ['b', ElementType.Open, 45, 48]
+        ]);
+    });
 });

@@ -5,7 +5,10 @@ export type FastScanCallback = (name: string, type: ElementType, start: number, 
 export const enum ElementType {
     Open = 1,
     Close = 2,
-    SelfClose = 3
+    SelfClose = 3,
+    CData = 4,
+    ProcessingInstruction = 5,
+    Comment = 6
 }
 
 export interface SpecialType {
@@ -69,10 +72,17 @@ export interface ScannerOptions {
      * in non-XML syntax
      */
     empty: string[];
+
+    /**
+     * If enabled, scanner callback will receive XML tokes, including comment, cdata
+     * and processing instructions. If disabled, only tags are emitted
+     */
+    allTokens: boolean;
 }
 
 const defaultOptions: ScannerOptions = {
     xml: false,
+    allTokens: false,
     special: {
         style: null,
         script: ['', 'text/javascript', 'application/x-javascript', 'javascript', 'typescript', 'ts', 'coffee', 'coffeescript']
