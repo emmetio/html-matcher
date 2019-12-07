@@ -87,7 +87,7 @@ export default function match(source: string, pos: number, opt?: Partial<Scanner
                 }
             }
         }
-    }, options.special);
+    }, options);
 
     stack.length = pool.length = 0;
     return result;
@@ -127,7 +127,7 @@ export function balancedOutward(source: string, pos: number, opt?: Partial<Scann
         } else {
             stack.push(allocTag(pool, name, start, end));
         }
-    }, options.special);
+    }, options);
 
     stack.length = pool.length = 0;
     return result;
@@ -222,7 +222,7 @@ export function balancedInward(source: string, pos: number, opt?: Partial<Scanne
         } else {
             stack.push(alloc(name, start, end));
         }
-    }, options.special);
+    }, options);
 
     stack.length = pool.length = 0;
     return result;

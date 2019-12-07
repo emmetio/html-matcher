@@ -1,5 +1,5 @@
 import Scanner, { isSpace, eatQuoted } from '@emmetio/scanner';
-import { FastScanCallback, ElementType, Chars, consumeArray, toCharCodes, isTerminator, consumeSection, ident, SpecialType } from './utils';
+import { FastScanCallback, ElementType, Chars, consumeArray, toCharCodes, isTerminator, consumeSection, ident, SpecialType, ScannerOptions } from './utils';
 import attributes, { attributeName, attributeValue, getAttributeValue } from './attributes';
 
 const cdataOpen = toCharCodes('<![CDATA[');
@@ -18,8 +18,9 @@ const piEnd = toCharCodes('?>');
  * @param special List of “special” HTML tags which should be ignored. Most likely
  * it’s a "script" and "style" tags.
  */
-export default function scan(source: string, callback: FastScanCallback, special?: SpecialType) {
+export default function scan(source: string, callback: FastScanCallback, options?: ScannerOptions) {
     const scanner = new Scanner(source);
+    const special = options ? options.special : null;
     let type: ElementType;
     let name: string;
     let nameStart: number;

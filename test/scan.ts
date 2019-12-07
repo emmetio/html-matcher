@@ -6,7 +6,7 @@ type TagRecord = [string, ElementType, number, number];
 const getTags = (code: string, opt: Partial<ScannerOptions> = {}) => {
     const tags: TagRecord[] = [];
     const cb: FastScanCallback = (name, type, start, end) => tags.push([name, type, start, end]);
-    scan(code, cb, createOptions(opt).special);
+    scan(code, cb, createOptions(opt));
     return tags;
 };
 
