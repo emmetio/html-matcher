@@ -6,7 +6,7 @@
   "module": "./dist/html-matcher.es.js",
   "types": "./dist/index.d.ts",
   "dependencies": {
-    "@emmetio/scanner": "^0.0.8"
+    "@emmetio/scanner": "^1.0.0"
   },
   "devDependencies": {
     "@types/mocha": "^7.0.2",
