@@ -10,6 +10,12 @@ const getTags = (code: string, opt: Partial<ScannerOptions> = {}) => {
     return tags;
 };
 
+const phpExample = `<html>
+ <body>
+ <?php echo '<p>Hello world</p>'; ?>
+ </body>
+</html>`;
+
 describe('Scan', () => {
     it('open tag', () => {
         deepEqual(getTags('<a>'), [['a', ElementType.Open, 0, 3]]);
@@ -98,6 +104,16 @@ describe('Scan', () => {
             ['a', ElementType.Open, 21, 24],
             ['#comment', ElementType.Comment, 24, 45],
             ['b', ElementType.Open, 45, 48]
+        ]);
+    });
+
+    it('PHP', () => {
+        deepEqual(getTags(phpExample, { allTokens: true }), [
+            ['html', ElementType.Open, 0, 6],
+            ['body', ElementType.Open, 8, 14],
+            ['php', ElementType.ProcessingInstruction, 16, 51],
+            ['body', ElementType.Close, 53, 60],
+            ['html', ElementType.Close, 61, 68]
         ]);
     });
 });
