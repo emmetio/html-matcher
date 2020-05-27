@@ -8,6 +8,8 @@ const commentOpen = toCharCodes('<!--');
 const commentClose = toCharCodes('-->');
 const piStart = toCharCodes('<?');
 const piEnd = toCharCodes('?>');
+const erbStart = toCharCodes('<%');
+const erbEnd = toCharCodes('%>');
 
 /**
  * Performs fast scan of given source code: for each tag found it invokes callback
@@ -39,6 +41,10 @@ export default function scan(source: string, callback: FastScanCallback, options
             }
         } else if (comment(scanner)) {
             if (allTokens && callback('#comment', ElementType.Comment, scanner.start, scanner.pos) === false) {
+                break;
+            }
+        } else if (erb(scanner)) {
+            if (allTokens && callback('#erb', ElementType.ERB, scanner.start, scanner.pos) === false) {
                 break;
             }
         } else if (piName = processingInstruction(scanner)) {
@@ -162,6 +168,28 @@ function processingInstruction(scanner: Scanner): string | null {
 
     scanner.pos = start;
     return null;
+}
+
+/**
+ * Consumes ERB-style entity: `<% ... %>` or `<%= ... %>`
+ */
+function erb(scanner: Scanner): boolean {
+    const start = scanner.pos;
+    if (consumeArray(scanner, erbStart)) {
+        while (!scanner.eof()) {
+            if (consumeArray(scanner, erbEnd)) {
+                break;
+            }
+
+            eatQuoted(scanner) || scanner.pos++;
+        }
+
+        scanner.start = start;
+        return true;
+    }
+
+    scanner.pos = start;
+    return false;
 }
 
 /**

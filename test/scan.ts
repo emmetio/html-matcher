@@ -16,6 +16,12 @@ const phpExample = `<html>
  </body>
 </html>`;
 
+const erbExample = `<ul>
+   <% @products.each do |p| %>
+      <li><%=  @p.name %></li>
+   <% end %>
+</ul>`;
+
 describe('Scan', () => {
     it('open tag', () => {
         deepEqual(getTags('<a>'), [['a', ElementType.Open, 0, 3]]);
@@ -114,6 +120,18 @@ describe('Scan', () => {
             ['php', ElementType.ProcessingInstruction, 16, 51],
             ['body', ElementType.Close, 53, 60],
             ['html', ElementType.Close, 61, 68]
+        ]);
+    });
+
+    it('ERB', () => {
+        deepEqual(getTags(erbExample, { allTokens: true }), [
+            ['ul', ElementType.Open, 0, 4],
+            ['#erb', ElementType.ERB, 8, 35],
+            ['li', ElementType.Open, 42, 46],
+            ['#erb', ElementType.ERB, 46, 61],
+            ['li', ElementType.Close, 61, 66],
+            ['#erb', ElementType.ERB, 70, 79],
+            ['ul', ElementType.Close, 80, 85]
         ]);
     });
 });

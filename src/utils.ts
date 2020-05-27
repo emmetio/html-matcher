@@ -8,7 +8,8 @@ export const enum ElementType {
     SelfClose = 3,
     CData = 4,
     ProcessingInstruction = 5,
-    Comment = 6
+    Comment = 6,
+    ERB = 7,
 }
 
 export interface SpecialType {
