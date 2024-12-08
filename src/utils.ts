@@ -2,7 +2,7 @@ import Scanner, { isSpace, isQuote, isAlpha, isNumber, eatPair } from '@emmetio/
 
 export type FastScanCallback = (name: string, type: ElementType, start: number, end: number) => false | any;
 
-export const enum ElementType {
+export enum ElementType {
     Open = 1,
     Close = 2,
     SelfClose = 3,

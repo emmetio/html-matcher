@@ -1,4 +1,5 @@
-import { deepStrictEqual as deepEqual } from 'assert';
+import { describe, it } from 'node:test';
+import { deepEqual } from 'node:assert/strict';
 import { attributes } from '../src';
 
 describe('Attributes', () => {

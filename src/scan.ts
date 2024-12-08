@@ -1,5 +1,5 @@
 import Scanner, { isSpace, eatQuoted } from '@emmetio/scanner';
-import { FastScanCallback, ElementType, Chars, consumeArray, toCharCodes, isTerminator, consumeSection, ident, SpecialType, ScannerOptions } from './utils';
+import { type FastScanCallback, ElementType, Chars, consumeArray, toCharCodes, isTerminator, consumeSection, ident, type SpecialType, type ScannerOptions } from './utils';
 import attributes, { attributeName, attributeValue, getAttributeValue } from './attributes';
 
 const cdataOpen = toCharCodes('<![CDATA[');

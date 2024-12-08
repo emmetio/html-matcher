@@ -1,9 +1,9 @@
-import { ScannerOptions, ElementType, createOptions } from './utils';
+import { type ScannerOptions, ElementType, createOptions } from './utils';
 import scan from './scan';
-import attributes, { AttributeToken } from './attributes';
+import attributes, { type AttributeToken } from './attributes';
 
-export { scan, attributes, AttributeToken };
-export { createOptions, ScannerOptions, ElementType, FastScanCallback } from './utils';
+export { scan, attributes, type AttributeToken };
+export { createOptions, type ScannerOptions, ElementType, type FastScanCallback } from './utils';
 
 type TagRange = [number, number];
 

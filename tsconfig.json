@@ -8,11 +8,12 @@
     "strictNullChecks": true,
     "declaration": true,
     "moduleResolution": "node",
+    "verbatimModuleSyntax": true,
     "resolveJsonModule": true,
     "esModuleInterop": true,
-    "module": "commonjs",
+    "module": "ESNext",
     "newLine": "LF",
     "outDir": "./dist"
   },
-  "files": ["src/index.ts"]
+  "include": ["src"]
 }

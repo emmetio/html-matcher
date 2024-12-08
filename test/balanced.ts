@@ -1,7 +1,10 @@
-import { readFileSync } from 'fs';
-import { resolve } from 'path';
-import { deepStrictEqual as deepEqual } from 'assert';
+import { readFileSync } from 'node:fs';
+import { resolve, dirname } from 'node:path';
+import { describe, it } from 'node:test';
+import { deepEqual } from 'node:assert/strict';
 import { balancedOutward as outward, balancedInward as inward } from '../src';
+
+const __dirname = dirname(new URL(import.meta.url).pathname)
 
 describe('Balanced models', () => {
     const doc = readFileSync(resolve(__dirname, 'sample.html'), 'utf8');

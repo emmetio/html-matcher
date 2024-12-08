@@ -1,4 +1,5 @@
-import { strictEqual as equal, deepStrictEqual as deepEqual } from 'assert';
+import { describe, it } from 'node:test';
+import { equal, deepEqual } from 'node:assert/strict';
 import match from '../src';
 
 const html = `<ul>

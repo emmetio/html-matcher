@@ -1,5 +1,6 @@
-import { scan, ElementType, FastScanCallback, ScannerOptions, createOptions } from '../src';
-import { deepStrictEqual as deepEqual } from 'assert';
+import { describe, it } from 'node:test';
+import { deepEqual } from 'node:assert/strict';
+import { scan, ElementType, type FastScanCallback, type ScannerOptions, createOptions } from '../src';
 
 type TagRecord = [string, ElementType, number, number];
 
