@@ -2,6 +2,11 @@ import Scanner, { isSpace, eatQuoted } from '@emmetio/scanner';
 import { type FastScanCallback, ElementType, Chars, consumeArray, toCharCodes, isTerminator, consumeSection, ident, type SpecialType, type ScannerOptions } from './utils';
 import attributes, { attributeName, attributeValue, getAttributeValue } from './attributes';
 
+interface TagState {
+    name: string
+    type: ElementType
+}
+
 const cdataOpen = toCharCodes('<![CDATA[');
 const cdataClose = toCharCodes(']]>');
 const commentOpen = toCharCodes('<!--');
@@ -24,17 +29,12 @@ export default function scan(source: string, callback: FastScanCallback, options
     const scanner = new Scanner(source);
     const special = options ? options.special : null;
     const allTokens = options ? options.allTokens : false;
-    let type: ElementType;
-    let name: string;
-    let nameStart: number;
-    let nameEnd: number;
+    const tagState: TagState = { name: '', type: ElementType.Open }
     let nameCodes: number[];
     let found = false;
     let piName: string | null = null;
 
     while (!scanner.eof()) {
-        const start = scanner.pos;
-
         if (cdata(scanner)) {
             if (allTokens && callback('#cdata', ElementType.CData, scanner.start, scanner.pos) === false) {
                 break;
@@ -51,47 +51,28 @@ export default function scan(source: string, callback: FastScanCallback, options
             if (allTokens && callback(piName, ElementType.ProcessingInstruction, scanner.start, scanner.pos) === false) {
                 break;
             }
-        } else if (scanner.eat(Chars.LeftAngle)) {
-            // Maybe a tag name?
-            type = scanner.eat(Chars.Slash) ? ElementType.Close : ElementType.Open;
-            nameStart = scanner.pos;
+        } else if (tag(scanner, tagState, options)) {
+            const { name, type } = tagState
+            if (callback(name, type, scanner.start, scanner.pos) === false) {
+                break;
+            }
 
-            if (ident(scanner)) {
-                // Consumed tag name
-                nameEnd = scanner.pos;
-                if (type !== ElementType.Close) {
-                    skipAttributes(scanner);
-                    scanner.eatWhile(isSpace);
-                    if (scanner.eat(Chars.Slash)) {
-                        type = ElementType.SelfClose;
-                    }
-                }
-
-                if (scanner.eat(Chars.RightAngle)) {
-                    // Tag properly closed
-                    name = scanner.substring(nameStart, nameEnd);
-                    if (callback(name, type, start, scanner.pos) === false) {
+            if (type === ElementType.Open && special && isSpecial(special, name, source, scanner.start, scanner.pos)) {
+                // Found opening tag of special element: we should skip
+                // scanner contents until we find closing tag
+                nameCodes = toCharCodes(name);
+                found = false;
+                while (!scanner.eof()) {
+                    if (consumeClosing(scanner, nameCodes)) {
+                        found = true;
                         break;
                     }
 
-                    if (type === ElementType.Open && special && isSpecial(special, name, source, start, scanner.pos)) {
-                        // Found opening tag of special element: we should skip
-                        // scanner contents until we find closing tag
-                        nameCodes = toCharCodes(name);
-                        found = false;
-                        while (!scanner.eof()) {
-                            if (consumeClosing(scanner, nameCodes)) {
-                                found = true;
-                                break;
-                            }
+                    scanner.pos++;
+                }
 
-                            scanner.pos++;
-                        }
-
-                        if (found && callback(name, ElementType.Close, scanner.start, scanner.pos) === false) {
-                            break;
-                        }
-                    }
+                if (found && callback(name, ElementType.Close, scanner.start, scanner.pos) === false) {
+                    break;
                 }
             }
         } else {
@@ -103,11 +84,15 @@ export default function scan(source: string, callback: FastScanCallback, options
 /**
  * Skips attributes in current tag context
  */
-function skipAttributes(scanner: Scanner) {
+function skipAttributes(scanner: Scanner, options?: ScannerOptions) {
+    const jsx = isJSXEnabled(options)
     while (!scanner.eof()) {
         scanner.eatWhile(isSpace);
         if (attributeName(scanner)) {
             if (scanner.eat(Chars.Equals)) {
+                if (jsx && jsxAttributeExpression(scanner)) {
+                    continue;
+                }
                 attributeValue(scanner);
             }
         } else if (isTerminator(scanner.peek())) {
@@ -193,6 +178,53 @@ function erb(scanner: Scanner): boolean {
 }
 
 /**
+ * Consumes tag from current scanner state. If tag is consumed, returns tag name
+ * and updates scanner state accordingly.
+ * To reduce GC overhead while scanning, this method will return boolean indicating
+ * whether tag was consumed or not, but store tag data in given `tagState` object
+ */
+function tag(scanner: Scanner, tagState?: TagState, options?: ScannerOptions): boolean {
+    const start = scanner.pos
+    if (scanner.eat(Chars.LeftAngle)) {
+        // Maybe a tag name?
+        let type = scanner.eat(Chars.Slash) ? ElementType.Close : ElementType.Open;
+        const nameStart = scanner.pos;
+
+        if (ident(scanner)) {
+            // Consumed tag name
+            const nameEnd = scanner.pos;
+            if (type !== ElementType.Close) {
+                skipAttributes(scanner);
+                scanner.eatWhile(isSpace);
+                if (scanner.eat(Chars.Slash)) {
+                    type = ElementType.SelfClose;
+                }
+            }
+
+            if (scanner.eat(Chars.RightAngle)) {
+                // Tag properly closed
+                scanner.start = start;
+                if (tagState) {
+                    tagState.name = scanner.substring(nameStart, nameEnd);
+                    tagState.type = type;
+                }
+                return true;
+            }
+        } else if (isJSXEnabled(options) && scanner.eat(Chars.RightAngle)) {
+            // JSX fragment bound: `<>` or `</>`. Treat it as element with empty name
+            scanner.start = start;
+            if (tagState) {
+                tagState.name = '';
+                tagState.type = type;
+            }
+            return true;
+        }
+    }
+
+    return false
+}
+
+/**
  * Check if given tag name should be considered as special
  */
 function isSpecial(special: SpecialType, name: string, source: string, start: number, end: number): boolean {
@@ -207,4 +239,36 @@ function isSpecial(special: SpecialType, name: string, source: string, start: nu
     }
 
     return false;
+}
+
+function isJSXEnabled(options?: ScannerOptions) {
+    return options?.jsx ?? true
+}
+
+/**
+ * Consumes JSX attribute expression: it might be a JS expression or another
+ * JSX element
+ */
+function jsxAttributeExpression(scanner: Scanner): boolean {
+    const start = scanner.pos;
+    if (scanner.eat(Chars.LeftCurly)) {
+        let braceCount = 1;
+        while (!scanner.eof()) {
+            if (scanner.eat(Chars.RightCurly)) {
+                braceCount--;
+                if (braceCount === 0) {
+                    scanner.start = start;
+                    return true;
+                }
+            } else if (scanner.eat(Chars.LeftCurly)) {
+                braceCount++;
+            } else if (eatQuoted(scanner) || tag(scanner)) {
+                continue;
+            } else {
+                scanner.pos++;
+            }
+        }
+    }
+
+    return false
 }

@@ -2,7 +2,7 @@ import { describe, it } from 'node:test';
 import { deepEqual } from 'node:assert/strict';
 import { scan, ElementType, type FastScanCallback, type ScannerOptions, createOptions } from '../src';
 
-type TagRecord = [string, ElementType, number, number];
+type TagRecord = [tagName: string, tagType: ElementType, start: number, end: number];
 
 const getTags = (code: string, opt: Partial<ScannerOptions> = {}) => {
     const tags: TagRecord[] = [];
@@ -135,4 +135,14 @@ describe('Scan', () => {
             ['ul', ElementType.Close, 80, 85]
         ]);
     });
+
+    it('JSX', () => {
+        deepEqual(getTags(`<><a /><b></b></>`), [
+            ['', ElementType.Open, 0, 2],
+            ['a', ElementType.SelfClose, 2, 7],
+            ['b', ElementType.Open, 7, 10],
+            ['b', ElementType.Close, 10, 14],
+            ['', ElementType.Close, 14, 17],
+        ])
+    })
 });

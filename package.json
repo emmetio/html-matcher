@@ -26,13 +26,13 @@
     "test": "tsx --test ./test/*.ts",
     "build": "rollup -c",
     "clean": "rm -rf ./dist",
-    "prepare2": "npm test && npm run clean && npm run build"
+    "prepare": "npm test && npm run clean && npm run build"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/emmetio/html-matcher.git"
   },
-  "keywords": [],
+  "keywords": ["html", "parser", "tag match"],
   "author": "Sergey Chikuyonok <serge.che@gmail.com>",
   "license": "ISC",
   "bugs": {

@@ -60,6 +60,12 @@ export interface ScannerOptions {
     xml: boolean;
 
     /**
+     * Parses source as JSX document: will support fragments (`<>...</>`) and
+     * elements inside attributes (`<Foo bar={<Baz/>}>`). Enabled by default
+     */
+    jsx?: boolean;
+
+    /**
      * List of tags that should have special parsing rules, e.g. should not parse
      * inner content and skip to closing tag. Key is a tag name that should be
      * considered special and value is either empty (always mark element as special)
